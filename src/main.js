@@ -1,0 +1,945 @@
+import "./style.css";
+import "./viewport.css";
+import "./responsive-menus.css";
+import "./responsive-controls.css";
+import "./embed.css";
+import { isPlayer, getGameViewport, refreshGameViewport } from "./embed.js";
+import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { createCar } from "./car.js";
+import { PhysicsGame } from "./physics.js";
+import { buildEnvironment } from "./environments.js";
+import { BoosterEffects } from "./effects.js";
+import { WreckEffects } from "./wreck.js";
+import { Input } from "./input.js";
+import { GameAudio } from "./audio.js";
+import { UI, LEVELS } from "./ui.js";
+import { setupPWA } from "./pwa.js";
+
+const viewport = getGameViewport();
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const defaults = {
+  muted: false,
+  music: true,
+  voices: true,
+  haptics: true,
+  shake: !reducedMotion,
+  quality:
+    isPlayer || viewport.width < 760 || matchMedia("(pointer: coarse)").matches
+      ? "balanced"
+      : "high",
+};
+function readStorage(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+function saveStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+const settings = { ...defaults, ...readStorage("roadster-settings", {}) };
+const records = readStorage("roadster-records", {});
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    powerPreference: "high-performance",
+    alpha: false,
+  });
+} catch (error) {
+  document.querySelector("#loading").innerHTML =
+    '<div class="dialog"><p class="eyebrow">SYSTEM CHECK</p><h2>This flight needs WebGL 2.</h2><p class="dialog-intro">Try an up-to-date Chrome, Edge, Firefox or Safari browser with graphics acceleration enabled.</p></div>';
+  throw error;
+}
+renderer.setSize(viewport.width, viewport.height);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.domElement.tabIndex = 0;
+renderer.domElement.setAttribute(
+  "aria-label",
+  "Roadster game. Use Q, W, O and P for boosters and arrow keys to drive.",
+);
+document.querySelector("#game-canvas").appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(
+  38,
+  viewport.width / viewport.height,
+  0.08,
+  2200,
+);
+const pmrem = new THREE.PMREMGenerator(renderer);
+const reflectionRoom = new RoomEnvironment();
+const envMap = pmrem.fromScene(reflectionRoom, 0.025).texture;
+scene.environment = envMap;
+scene.environmentIntensity = 0.6;
+reflectionRoom.dispose();
+pmrem.dispose();
+const renderTarget = new THREE.WebGLRenderTarget(
+  viewport.width,
+  viewport.height,
+  {
+    type: THREE.HalfFloatType,
+  },
+);
+renderTarget.samples = 4;
+const composer = new EffectComposer(renderer, renderTarget);
+composer.addPass(new RenderPass(scene, camera));
+const ao = new SSAOPass(scene, camera, viewport.width, viewport.height, 16);
+ao.kernelRadius = 0.45;
+ao.minDistance = 0.0001;
+ao.maxDistance = 0.025;
+composer.addPass(ao);
+const bloom = new UnrealBloomPass(
+  new THREE.Vector2(viewport.width, viewport.height),
+  0.22,
+  0.45,
+  1.3,
+);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+const car = createCar();
+scene.add(car.group);
+const audio = new GameAudio();
+audio.setMuted(settings.muted);
+audio.setPreferences(settings);
+audio.preload();
+// Unlock sound on a real gesture, including inspecting the car in the hangar.
+window.addEventListener("pointerdown", () => audio.start(), { once: true });
+window.addEventListener("keydown", () => audio.start(), { once: true });
+document.addEventListener("visibilitychange", () =>
+  audio.setPaused(paused || document.hidden || windowBlurred),
+);
+let mode = "menu",
+  paused = false,
+  windowBlurred = false,
+  environment = null,
+  studio = null,
+  selected = 0,
+  cameraMode = 0,
+  shake = 0,
+  impactFlash = 0,
+  blastFlash = 0,
+  lastHaptic = 0;
+let outcomeAt = null,
+  finishState = null,
+  resultShown = false,
+  firstStart = true,
+  airMessage = false,
+  crashMessageAt = 0,
+  wreckStarted = false,
+  aftermathTime = 0;
+const pendingImpacts = [];
+let countdown = 0,
+  totalTime = 0,
+  frameCount = 0,
+  fpsSum = 0,
+  hudTick = 0,
+  lastFrame = performance.now();
+const physics = new PhysicsGame({
+  onImpact: (e) => {
+    if (mode !== "game") return;
+    pendingImpacts.push(e);
+    effects.impact(e);
+    audio.impact(e);
+    shake = Math.min(0.7, shake + e.intensity * 0.5);
+    impactFlash = Math.min(0.4, e.intensity * 0.5);
+    vibrate([Math.min(120, 20 + e.intensity * 90)]);
+    if (
+      !wreckStarted &&
+      e.intensity > 0.22 &&
+      physics.time - crashMessageAt > 3
+    ) {
+      crashMessageAt = physics.time;
+      ui.message(
+        [
+          "That was probably load-bearing.",
+          "The warranty has left the chat.",
+          "Structural feedback received.",
+          "A small setback. For the building.",
+        ][Math.floor(Math.random() * 4)],
+      );
+    }
+  },
+});
+const effects = new BoosterEffects(scene, car);
+const wreck = new WreckEffects(scene, physics, car);
+const renderAO = ao.render.bind(ao);
+ao.render = (...args) => {
+  const excluded = [effects.flames, ...(wreck.aoExcluded || [])];
+  const visible = excluded.map((object) => object.visible);
+  excluded.forEach((object) => {
+    object.visible = false;
+  });
+  try {
+    renderAO(...args);
+  } finally {
+    excluded.forEach((object, index) => {
+      object.visible = visible[index];
+    });
+  }
+};
+const ui = new UI(action, settings);
+const input = new Input({ onAction: action });
+input.bind();
+const vPosition = new THREE.Vector3(),
+  vTarget = new THREE.Vector3(),
+  vCamera = new THREE.Vector3(),
+  vForward = new THREE.Vector3(),
+  lookAt = new THREE.Vector3();
+let followYaw = 0,
+  orbitYaw = 0.78,
+  orbitPitch = 0.2,
+  orbitIdle = 0;
+const pointer = { down: false, x: 0, y: 0 };
+renderer.domElement.addEventListener("pointerdown", (e) => {
+  renderer.domElement.focus({ preventScroll: true });
+  if (mode !== "menu") return;
+  pointer.down = true;
+  pointer.x = e.clientX;
+  pointer.y = e.clientY;
+  try {
+    renderer.domElement.setPointerCapture(e.pointerId);
+  } catch {}
+  orbitIdle = 8;
+});
+renderer.domElement.addEventListener("pointermove", (e) => {
+  if (!pointer.down || mode !== "menu") return;
+  orbitYaw += (e.clientX - pointer.x) * 0.006;
+  orbitPitch = THREE.MathUtils.clamp(
+    orbitPitch + (e.clientY - pointer.y) * 0.002,
+    0.06,
+    0.7,
+  );
+  pointer.x = e.clientX;
+  pointer.y = e.clientY;
+});
+renderer.domElement.addEventListener("pointerup", () => (pointer.down = false));
+renderer.domElement.addEventListener(
+  "pointercancel",
+  () => (pointer.down = false),
+);
+
+renderer.domElement.addEventListener(
+  "lostpointercapture",
+  () => (pointer.down = false),
+);
+window.addEventListener("blur", () => {
+  windowBlurred = true;
+  pointer.down = false;
+  audio.setPaused(true);
+});
+window.addEventListener("focus", () => {
+  windowBlurred = false;
+  audio.setPaused(paused || document.hidden);
+});
+
+function vibrate(pattern) {
+  if (!settings.haptics || !navigator.vibrate) return;
+  try {
+    navigator.vibrate(pattern);
+  } catch {}
+}
+function configureGraphics() {
+  const high = settings.quality === "high",
+    low = settings.quality === "low";
+  renderer.setPixelRatio(
+    Math.min(devicePixelRatio, low ? 1 : high ? 1.75 : 1.25),
+  );
+  renderer.shadowMap.enabled = !low;
+  bloom.enabled = !low;
+  ao.enabled = high;
+  composer.setPixelRatio(renderer.getPixelRatio());
+  composer.setSize(viewport.width, viewport.height);
+  ao.setSize(
+    Math.round(viewport.width * 0.8),
+    Math.round(viewport.height * 0.8),
+  );
+  effects.resize?.(viewport.height, renderer.getPixelRatio());
+  wreck.resize?.(viewport.height, renderer.getPixelRatio());
+  scene.traverse((obj) => {
+    if (obj.isDirectionalLight && obj.shadow) {
+      const size = high ? 2048 : 1024;
+      if (obj.shadow.mapSize.x !== size) {
+        obj.shadow.mapSize.set(size, size);
+        obj.shadow.map?.dispose();
+        obj.shadow.map = null;
+      }
+    }
+  });
+}
+function makeStudio() {
+  const group = new THREE.Group();
+  group.name = "Launch studio";
+  scene.add(group);
+  scene.background = new THREE.Color(0x090b0e);
+  scene.fog = new THREE.FogExp2(0x090b0e, 0.025);
+  scene.environmentIntensity = 0.6;
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(300, 300),
+    new THREE.MeshStandardMaterial({
+      color: 0x010102,
+      roughness: 1,
+      metalness: 0,
+      envMapIntensity: 0,
+    }),
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  group.add(floor);
+  const hemi = new THREE.HemisphereLight(0xc6ddff, 0x161216, 0.75);
+  group.add(hemi);
+  const key = new THREE.DirectionalLight(0xf1f5ff, 2.3);
+  key.position.set(4, 8, 4);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.left = -6;
+  key.shadow.camera.right = 6;
+  key.shadow.camera.top = 6;
+  key.shadow.camera.bottom = -6;
+  key.shadow.bias = -0.0002;
+  key.shadow.normalBias = 0.02;
+  key.shadow.radius = 5;
+  group.add(key);
+  const rim = new THREE.DirectionalLight(0x9ebdff, 1.5);
+  rim.position.set(-5, 4, -3);
+  group.add(rim);
+  const front = new THREE.DirectionalLight(0xffe5d4, 0.65);
+  front.position.set(0, 2, 8);
+  group.add(front);
+  const red = new THREE.PointLight(0xe82127, 18, 12, 2);
+  red.position.set(-4, 1.8, -3);
+  group.add(red);
+  // A long red floor inlay anchors the launch-stage composition.
+  const line = new THREE.Mesh(
+    new THREE.BoxGeometry(25, 0.018, 0.025),
+    new THREE.MeshBasicMaterial({ color: 0x7f151d }),
+  );
+  line.position.set(0, 0.013, -4);
+  group.add(line);
+  car.group.position.set(0, 0.73, 0);
+  car.group.quaternion.identity();
+  car.setDamage(0);
+  return {
+    group,
+    dispose() {
+      scene.remove(group);
+      group.traverse((o) => {
+        o.geometry?.dispose();
+        if (o.material) o.material.dispose();
+        o.shadow?.map?.dispose();
+      });
+    },
+  };
+}
+function home() {
+  input.enabled = false;
+  input.clear();
+  paused = false;
+  mode = "menu";
+  outcomeAt = null;
+  finishState = null;
+  resultShown = false;
+  wreck.clear();
+  audio.reset();
+  audio.setScene("menu");
+  pendingImpacts.length = 0;
+  wreckStarted = false;
+  aftermathTime = 0;
+  blastFlash = 0;
+  environment?.dispose();
+  environment = null;
+  studio?.dispose();
+  studio = makeStudio();
+  effects.clear();
+  ui.home();
+  orbitYaw = 0.78;
+  orbitPitch = 0.2;
+  configureGraphics();
+  audio.update({}, false);
+}
+function startLevel(index = selected) {
+  selected = index;
+  audio.start();
+  input.clear();
+  input.enabled = false;
+  paused = false;
+  mode = "game";
+  wreck.clear();
+  audio.reset();
+  pendingImpacts.length = 0;
+  wreckStarted = false;
+  aftermathTime = 0;
+  blastFlash = 0;
+  studio?.dispose();
+  studio = null;
+  environment?.dispose();
+  environment = null;
+  physics.setLevel(LEVELS[index].id);
+  audio.beginRun(LEVELS[index].id);
+  environment = buildEnvironment(LEVELS[index].id, scene, physics);
+  scene.environmentIntensity = index === 2 ? 0.38 : 0.6;
+  effects.clear();
+  car.setDamage(0);
+  ui.game(LEVELS[index]);
+  outcomeAt = null;
+  finishState = null;
+  resultShown = false;
+  airMessage = false;
+  crashMessageAt = 0;
+  followYaw = 0;
+  shake = 0;
+  impactFlash = 0;
+  countdown = 1.4;
+  ui.message(
+    index === 2
+      ? "Autodrive engaged. You have the boosters."
+      : "Flight systems armed.",
+  );
+  updateCar(physics.state, 0);
+  updateCamera(1, true);
+  configureGraphics();
+  if (!isPlayer && firstStart && !readStorage("roadster-manual-seen", false)) {
+    firstStart = false;
+    paused = true;
+    ui.help();
+    saveStorage("roadster-manual-seen", true);
+  }
+}
+function reset() {
+  if (mode !== "game") return;
+  ui.close();
+  ui.recovery(null);
+  input.clear();
+  wreck.clear();
+  audio.reset();
+  pendingImpacts.length = 0;
+  wreckStarted = false;
+  aftermathTime = 0;
+  blastFlash = 0;
+  physics.reset();
+  audio.beginRun(LEVELS[selected].id);
+  effects.clear();
+  environment?.update(0);
+  car.setDamage(0);
+  outcomeAt = null;
+  finishState = null;
+  resultShown = false;
+  paused = false;
+  airMessage = false;
+  crashMessageAt = 0;
+  shake = 0;
+  impactFlash = 0;
+  countdown = 0.7;
+  input.enabled = false;
+  followYaw = 0;
+  updateCar(physics.state, 0);
+  updateCamera(1, true);
+  ui.message("One more perfectly reasonable attempt.");
+}
+function togglePause() {
+  if (mode !== "game") {
+    if (!ui.dialog.hidden) {
+      ui.close();
+    }
+    return;
+  }
+  if (resultShown) return;
+  if (paused) {
+    ui.close();
+    paused = false;
+    input.enabled = countdown <= 0;
+    input.clear();
+  } else {
+    paused = true;
+    input.enabled = false;
+    input.clear();
+    ui.pause();
+  }
+}
+function action(name, value) {
+  if (name === "select") {
+    selected = value;
+    return;
+  }
+  if (name === "start") {
+    startLevel(selected);
+    return;
+  }
+  if (name === "home") {
+    home();
+    return;
+  }
+  if (name === "reset") {
+    reset();
+    return;
+  }
+  if (name === "pause") {
+    togglePause();
+    return;
+  }
+  if (name === "blur") {
+    if (mode === "game" && !paused && !resultShown) {
+      paused = true;
+      input.enabled = false;
+      ui.pause();
+    }
+    return;
+  }
+  if (name === "close") {
+    if (resultShown) {
+      home();
+      return;
+    }
+    ui.close();
+    paused = false;
+    input.enabled = mode === "game" && countdown <= 0;
+    input.clear();
+    return;
+  }
+  if (name === "help") {
+    if (mode === "game") {
+      paused = true;
+      input.enabled = false;
+      input.clear();
+    }
+    ui.help();
+    return;
+  }
+  if (name === "settings") {
+    if (mode === "game") {
+      paused = true;
+      input.enabled = false;
+      input.clear();
+    }
+    ui.showSettings(settings);
+    return;
+  }
+  if (name === "save-settings") {
+    settings.muted = !document.querySelector("#setting-sound").checked;
+    settings.music = document.querySelector("#setting-music").checked;
+    settings.voices = document.querySelector("#setting-voices").checked;
+    settings.haptics = document.querySelector("#setting-haptics").checked;
+    settings.shake = document.querySelector("#setting-shake").checked;
+    settings.quality = document.querySelector("#setting-quality").value;
+    saveStorage("roadster-settings", settings);
+    audio.setMuted(settings.muted);
+    audio.setPreferences(settings);
+    ui.setMuted(settings.muted);
+    configureGraphics();
+    action("close");
+    return;
+  }
+  if (name === "mute") {
+    settings.muted = !settings.muted;
+    audio.start();
+    audio.setMuted(settings.muted);
+    ui.setMuted(settings.muted);
+    saveStorage("roadster-settings", settings);
+    ui.toast(settings.muted ? "Sound muted" : "Sound on");
+    return;
+  }
+  if (name === "camera") {
+    cameraMode = (cameraMode + 1) % 3;
+    ui.toast(["Chase camera", "Trackside camera", "Close pursuit"][cameraMode]);
+    return;
+  }
+  if (name === "fullscreen") {
+    const unavailable = () =>
+      ui.toast(
+        isPlayer
+          ? "Open the full game to use fullscreen."
+          : "Fullscreen is unavailable in this browser.",
+      );
+    // Sandboxed players can reject this synchronously or as a promise.
+    try {
+      if (document.fullscreenElement)
+        Promise.resolve(document.exitFullscreen?.()).catch(unavailable);
+      else if (
+        document.fullscreenEnabled !== false &&
+        document.documentElement.requestFullscreen
+      )
+        Promise.resolve(document.documentElement.requestFullscreen()).catch(
+          unavailable,
+        );
+      else unavailable();
+    } catch {
+      unavailable();
+    }
+    return;
+  }
+  if (name === "next") {
+    if (selected === 2) {
+      home();
+      return;
+    }
+    ui.select(selected + 1);
+    startLevel(selected);
+    return;
+  }
+}
+function updateCar(s, dt) {
+  car.group.position.copy(s.position);
+  car.group.quaternion.copy(s.quaternion);
+  car.update(dt, {
+    speed: s.signedSpeed || s.speed,
+    steer: (s.steer * 0.54) / (1 + Math.abs(s.signedSpeed) / 26),
+    boosters: s.boosterLevels,
+  });
+  car.wheels.forEach((wheel, i) => {
+    wheel.position.y = s.suspension[i];
+  });
+  car.setDamage(s.damage);
+  car.group.updateMatrixWorld();
+}
+function updateCamera(dt, snap = false) {
+  const mobile =
+    viewport.width < 760 || matchMedia("(pointer: coarse)").matches;
+  const portrait = viewport.height > viewport.width;
+  const landscapePhone = mobile && !portrait && viewport.height < 520;
+  if (mode === "menu") {
+    orbitIdle -= dt;
+    if (!pointer.down && orbitIdle <= 0 && !reducedMotion)
+      orbitYaw += dt * 0.025;
+    const compactShowroom =
+      !isPlayer && !portrait && (viewport.width <= 1100 || viewport.height <= 520);
+    const distance = portrait
+      ? Math.max(10, 7.5 / camera.aspect)
+      : compactShowroom
+        ? 9.8
+        : 8.7;
+    vCamera.set(
+      Math.sin(orbitYaw) * distance,
+      1.2 + Math.sin(orbitPitch) * distance,
+      Math.cos(orbitYaw) * distance,
+    );
+    // Framing the car slightly low leaves breathing room for the title.
+    camera.fov = portrait ? 43 : 38;
+    camera.position.copy(vCamera);
+    camera.setViewOffset(
+      viewport.width,
+      viewport.height,
+      0,
+      viewport.height * (portrait ? 0.065 : compactShowroom ? 0.01 : -0.035),
+      viewport.width,
+      viewport.height,
+    );
+    camera.lookAt(0, 0.65, 0);
+    camera.updateProjectionMatrix();
+    return;
+  }
+  camera.setViewOffset(
+    viewport.width,
+    viewport.height,
+    0,
+    viewport.height * (landscapePhone ? 0.18 : portrait ? 0.12 : 0.055),
+    viewport.width,
+    viewport.height,
+  );
+  const s = physics.state;
+  vPosition.copy(s.position);
+  let speed = s.speed;
+  vForward.set(0, 0, 1).applyQuaternion(car.group.quaternion);
+  vForward.y = 0;
+  if (s.grounded && vForward.length() > 0.3) {
+    const targetYaw = Math.atan2(vForward.x, vForward.z);
+    followYaw +=
+      Math.atan2(
+        Math.sin(targetYaw - followYaw),
+        Math.cos(targetYaw - followYaw),
+      ) * Math.min(1, dt * 4);
+  }
+  const isRamp = LEVELS[selected].id === "ramp";
+  if (cameraMode === 1 || (isRamp && cameraMode !== 2)) {
+    vCamera.set(
+      s.position.x + 23,
+      Math.max(8, s.position.y + 5.5),
+      s.position.z - 9,
+    );
+    if (isRamp) {
+      vCamera.x = 28;
+      vCamera.y = Math.max(9, s.position.y + 4.5);
+      vCamera.z = s.position.z - 10;
+    }
+    vTarget.set(s.position.x, s.position.y + 1, s.position.z + 1.3);
+  } else {
+    const close = cameraMode === 2,
+      distance = close ? 5.8 : landscapePhone ? 8.8 : portrait ? 11.4 : 8.8;
+    const offset = new THREE.Vector3(
+      close ? 1.8 : 3.3,
+      close ? 2.3 : selected === 0 ? 3.3 : 3.6,
+      -distance,
+    ).applyAxisAngle(THREE.Object3D.DEFAULT_UP, followYaw);
+    vCamera.copy(vPosition).add(offset);
+    vCamera.y = Math.max(2, vCamera.y);
+    vTarget
+      .copy(vPosition)
+      .add(
+        new THREE.Vector3(0, 0.25, close ? 0.8 : 0.2).applyAxisAngle(
+          THREE.Object3D.DEFAULT_UP,
+          followYaw,
+        ),
+      );
+  }
+  if (wreckStarted) {
+    vCamera.sub(vPosition).multiplyScalar(1.22).add(vPosition);
+    vCamera.y += 0.8;
+  }
+  const blend = snap ? 1 : 1 - Math.exp(-dt * (isRamp ? 4 : 5.5));
+  camera.position.lerp(vCamera, blend);
+  lookAt.lerp(vTarget, snap ? 1 : 1 - Math.exp(-dt * 7));
+  if (settings.shake && !paused) {
+    const jet = Math.max(...s.boosterLevels, s.rearBoost) * 0.012;
+    camera.position.x += (Math.random() - 0.5) * (shake + jet);
+    camera.position.y += (Math.random() - 0.5) * (shake + jet);
+  }
+  camera.lookAt(lookAt);
+  camera.fov = THREE.MathUtils.lerp(
+    camera.fov,
+    (mobile ? 55 : 48) + Math.min(9, speed * 0.12),
+    Math.min(1, dt * 3),
+  );
+  camera.updateProjectionMatrix();
+}
+function finish(s) {
+  resultShown = true;
+  input.enabled = false;
+  input.clear();
+  let best = records[LEVELS[selected].id];
+  if (s.outcome === "success") {
+    best = Math.min(best || Infinity, s.time);
+    records[LEVELS[selected].id] = best;
+    saveStorage("roadster-records", records);
+    audio.chime();
+    vibrate([45, 70, 100]);
+  }
+  audio.finish(s.outcome);
+  ui.result(s, LEVELS[selected], best);
+}
+function resize() {
+  const previousWidth = viewport.width;
+  refreshGameViewport();
+  // Rotation moves the touch controls under the player's fingers. Require a
+  // fresh touch instead of carrying a held rocket into the new layout.
+  if (previousWidth !== viewport.width) {
+    input.clear();
+    pointer.down = false;
+  }
+  camera.aspect = viewport.width / viewport.height;
+  renderer.setSize(viewport.width, viewport.height);
+  composer.setSize(viewport.width, viewport.height);
+  ao.setSize(
+    Math.round(viewport.width * 0.8),
+    Math.round(viewport.height * 0.8),
+  );
+  effects.resize?.(viewport.height, renderer.getPixelRatio());
+  wreck.resize?.(viewport.height, renderer.getPixelRatio());
+  camera.updateProjectionMatrix();
+}
+window.addEventListener("resize", resize);
+window.visualViewport?.addEventListener("resize", resize);
+window.addEventListener("install-help", (e) => {
+  if (mode === "game") {
+    paused = true;
+    input.enabled = false;
+    input.clear();
+  }
+  ui.modal(
+    `<p class="eyebrow">YOUR POCKET LAUNCHPAD</p><h2 id="dialog-title">${e.detail.title}</h2><p class="install-instructions">${e.detail.instructions}</p><p class="install-instructions">Once the game has loaded online, all three tests are available offline.</p><button class="primary-button wide" data-action="close">Got it</button>`,
+  );
+});
+window.addEventListener("pwa-installed", () =>
+  ui.toast("Roadster installed. Ready for takeoff."),
+);
+renderer.domElement.addEventListener("webglcontextlost", (e) => {
+  e.preventDefault();
+  paused = true;
+  input.enabled = false;
+  ui.toast("Graphics interrupted. Reload to restart the flight systems.");
+});
+setupPWA();
+home();
+const linkedLevel = LEVELS.findIndex(
+  (level) => level.id === new URLSearchParams(location.search).get("test"),
+);
+if (linkedLevel >= 0) ui.select(linkedLevel);
+setTimeout(() => {
+  document.querySelector("#loading").classList.add("done");
+  setTimeout(() => document.querySelector("#loading")?.remove(), 700);
+}, 450);
+
+function animate(now) {
+  requestAnimationFrame(animate);
+  const dt = Math.min((now - lastFrame) / 1000, 0.05);
+  lastFrame = now;
+  totalTime += dt;
+  audio.setPaused(paused || document.hidden || windowBlurred);
+  if (document.hidden) return;
+  if (!paused) {
+    shake *= Math.exp(-dt * 8);
+    impactFlash *= Math.exp(-dt * 5);
+    blastFlash *= Math.exp(-dt * 12);
+  }
+  document
+    .querySelector(".impact-vignette")
+    .style.setProperty("--impact", impactFlash);
+  document
+    .querySelector(".explosion-flash")
+    .style.setProperty("--blast", blastFlash);
+  if (mode === "game") {
+    if (!paused && !resultShown) {
+      if (countdown > 0) {
+        countdown -= dt;
+        if (countdown <= 0) {
+          input.enabled = true;
+          ui.message(
+            LEVELS[selected].id === "ramp"
+              ? "AUTO DRIVE · Ready your Q + W jets."
+              : "Your move.",
+          );
+        }
+      } else physics.step(dt, input.state);
+    } else if (resultShown) {
+      physics.step(dt, {});
+    }
+    let state = physics.state;
+    if (!paused && !resultShown && !state.outcome && state.recoveryReady) {
+      reset();
+      state = physics.state;
+      ui.message("Back on four wheels. A minor orientation issue.");
+    }
+    updateCar(state, paused ? 0 : dt);
+    for (const event of pendingImpacts) {
+      car.applyImpact(event);
+      wreck.onImpact(event);
+    }
+    pendingImpacts.length = 0;
+    if (state.crashed && !wreckStarted) {
+      wreckStarted = true;
+      // Detach actual car parts first, so the same physical blast catches them
+      // and the level's loose objects. The rigid shell keeps tumbling afterward.
+      wreck.explode(state);
+      physics.explode();
+      state = physics.state;
+      audio.explosion();
+      shake = 1.15;
+      blastFlash = reducedMotion ? 0.12 : 0.68;
+      impactFlash = 0.6;
+      input.enabled = false;
+      input.clear();
+      ui.message(
+        "Thermal runaway. An ambitious interpretation of launch control.",
+        4800,
+      );
+      vibrate([120, 60, 180, 80, 80]);
+    }
+    physics.setMissingWheels(car.wheels.map((wheel) => !wheel.visible));
+    environment?.update(paused ? 0 : dt);
+    effects.update(paused ? 0 : dt, state);
+    wreck.update(paused ? 0 : dt, state);
+    audio.update(state, !paused && (!resultShown || state.crashed));
+    hudTick += dt;
+    if (hudTick > 0.04) {
+      ui.update(
+        finishState ? { ...state, time: finishState.time } : state,
+        LEVELS[selected],
+      );
+      hudTick = 0;
+    }
+    if (!paused && !resultShown) {
+      if (state.altitude > 4 && !airMessage && !wreckStarted) {
+        airMessage = true;
+        ui.message("You are now an aviation problem.");
+      }
+      if (
+        state.rampStage === "airborne" &&
+        !physics._uiAirborneNotified &&
+        !wreckStarted
+      ) {
+        physics._uiAirborneNotified = true;
+        ui.message("Q + W · Rotate. O + P · Catch it.");
+      }
+      if (state.time < 0.1) physics._uiAirborneNotified = false;
+      if (
+        settings.haptics &&
+        Math.max(...state.boosterLevels, state.rearBoost) > 0.3 &&
+        now - lastHaptic > 160
+      ) {
+        lastHaptic = now;
+        vibrate(12);
+      }
+      if (state.outcome && !outcomeAt) {
+        outcomeAt = now;
+        finishState = { ...state };
+        input.enabled = false;
+        input.clear();
+        aftermathTime = 0;
+      }
+      if (outcomeAt) aftermathTime += dt;
+      if (
+        outcomeAt &&
+        aftermathTime >
+          (state.outcome === "success" ? 0.65 : wreckStarted ? 5.2 : 1.8)
+      )
+        finish(finishState || state);
+    }
+  } else {
+    car.update(dt, { speed: 0, steer: 0, boosters: [0, 0, 0, 0] });
+    audio.update({}, false);
+  }
+  updateCamera(dt);
+  composer.render();
+  if (import.meta.env.DEV) {
+    frameCount++;
+    fpsSum += dt;
+    if (fpsSum > 1) {
+      window.__roadster.fps = Math.round(frameCount / fpsSum);
+      frameCount = 0;
+      fpsSum = 0;
+    }
+  }
+}
+if (import.meta.env.DEV)
+  window.__roadster = {
+    physics,
+    car,
+    scene,
+    camera,
+    renderer,
+    ui,
+    input,
+    effects,
+    wreck,
+    audio,
+    settings,
+    viewport,
+    startLevel,
+    home,
+    reset,
+    get mode() {
+      return mode;
+    },
+    get paused() {
+      return paused;
+    },
+    get selected() {
+      return selected;
+    },
+    get frame() {
+      return totalTime;
+    },
+    fps: 0,
+  };
+requestAnimationFrame(animate);

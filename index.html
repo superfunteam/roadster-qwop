@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0b0c0e" />
+    <meta name="color-scheme" content="dark" />
+    <title>Roadster — But Can It Fly? | A Rocket-Powered QWOP Game</title>
+    <meta
+      name="description"
+      content="Four boosters. Zero flight assistance. Pilot a rocket-powered Roadster through a destructible garage, a quarter-mile drag strip, and an upside-down ramp. Play free on desktop or mobile."
+    />
+    <meta name="application-name" content="Roadster: But Can It Fly?" />
+    <meta name="apple-mobile-web-app-title" content="Roadster" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://roadster.superfun.games/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Superfun Games" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content="ROADSTER — But Can It Fly?" />
+    <meta
+      property="og:description"
+      content="Four boosters. Zero flight assistance. A spectacularly ill-advised rocket-powered QWOP game. Play free."
+    />
+    <meta property="og:url" content="https://roadster.superfun.games/" />
+    <meta
+      property="og:image"
+      content="https://roadster.superfun.games/og-image.png"
+    />
+    <meta
+      property="og:image:secure_url"
+      content="https://roadster.superfun.games/og-image.png"
+    />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="A silver rocket-powered Roadster launches into the night above blue booster plumes. Roadster — But Can It Fly?"
+    />
+    <meta name="twitter:card" content="player" />
+    <meta
+      name="twitter:player"
+      content="https://roadster.superfun.games/player/"
+    />
+    <meta name="twitter:player:width" content="640" />
+    <meta name="twitter:player:height" content="480" />
+    <meta name="twitter:title" content="ROADSTER — But Can It Fly?" />
+    <meta
+      name="twitter:description"
+      content="Four boosters. Zero flight assistance. Your garage is about to become a launchpad."
+    />
+    <meta
+      name="twitter:image"
+      content="https://roadster.superfun.games/og-image.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Rocket-powered silver Roadster above glowing blue booster plumes."
+    />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/icons/favicon-32.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon.png"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Roadster — But Can It Fly?",
+        "url": "https://roadster.superfun.games/",
+        "image": "https://roadster.superfun.games/og-image.png",
+        "description": "A rocket-powered 3D QWOP driving game with four independent boosters, three levels, and spectacular physics.",
+        "genre": ["Physics", "Racing", "Simulation"],
+        "gamePlatform": ["Web browser", "Desktop", "Mobile"],
+        "playMode": "SinglePlayer",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any with WebGL 2",
+        "inLanguage": "en",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Superfun Games",
+          "url": "https://superfun.games"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="game-canvas" aria-label="3D Roadster game"></div>
+    <div id="loading">
+      <div class="loading-wordmark">T E S L A</div>
+      <div class="loading-track"><i></i></div>
+      <p>Preparing for the improbable.</p>
+    </div>
+    <main id="app"></main>
+    <noscript
+      >This game needs JavaScript and a WebGL 2 compatible browser. Enable
+      JavaScript to take the Roadster for a flight.</noscript
+    >
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

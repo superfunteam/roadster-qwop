@@ -1,0 +1,135 @@
+{
+  "effects": [
+    {
+      "id": "booster-loop",
+      "duration": 6,
+      "loop": true,
+      "prompt": "Seamless sustained loop of a powerful compact rocket thruster firing at full throttle. Dense pressurized gas roar, deep chesty combustion rumble, crisp turbulent hiss and subtle mechanical vibration. Close perspective, dry clean game audio, steady energy throughout, no ignition, no fade, no speech, no music."
+    },
+    {
+      "id": "booster-ignite",
+      "duration": 1.1,
+      "prompt": "One compact rocket ignition: quick metallic valve clack, compressed gas snap, then a punchy low whoomp and short rising rocket blast. Immediate attack, heavy and satisfying, clean isolated game sound. No music, no voice."
+    },
+    {
+      "id": "booster-cut",
+      "duration": 0.8,
+      "prompt": "One abrupt rocket valve shutdown: tight mechanical clunk, brief falling compressed-air hiss and a tiny metallic rattle. Dry isolated close recording, crisp responsive videogame sound, no music or voice."
+    },
+    {
+      "id": "impact-light-1",
+      "duration": 1.0,
+      "prompt": "One small car body collision against a wooden storage crate: sharp hollow wooden crack, dull heavy bumper thud, two small fragments clattering. Immediate transient, realistic but slightly exaggerated arcade racing game Foley. No voices or music."
+    },
+    {
+      "id": "impact-light-2",
+      "duration": 1.1,
+      "prompt": "One car fender clipping a metal garage shelf: abrupt resonant metallic clang, short low thump, rattling metal tools bouncing. Close dry punchy isolated sound, comedic physical weight, no voices or music."
+    },
+    {
+      "id": "impact-heavy-1",
+      "duration": 2.2,
+      "prompt": "One extremely heavy sports car crash into concrete: instant deep impact slam followed by violent layered aluminium crumpling, glass breaking and a few loose metal fragments falling. Dense visceral arcade racing game crash. Close dry perspective, no siren, no voices, no music."
+    },
+    {
+      "id": "impact-heavy-2",
+      "duration": 2.4,
+      "prompt": "A sports car lands hard upside down: one massive low metal slam, buckling roof crunch, glass crack and rattling wheels, then short scattered debris clatter. Funny catastrophic videogame physics crash with believable automotive weight, no music or voices."
+    },
+    {
+      "id": "crunch",
+      "duration": 1.5,
+      "prompt": "One brutal close-up car body panel crumple. Thick aluminium bends and folds with a crunchy metallic tearing and grinding sound, short low thud underneath. Instant crisp attack, isolated Foley, no background ambience, no music, no voices."
+    },
+    {
+      "id": "glass",
+      "duration": 1.4,
+      "prompt": "A laminated automotive windshield suddenly fractures and shatters: one sharp glass crack with bright cascading tiny glass fragments tinkling onto concrete. Single distinct event, clean close-up game Foley, no other sounds, no music or voices."
+    },
+    {
+      "id": "explosion",
+      "duration": 4.5,
+      "prompt": "One enormous cinematic videogame car explosion. Instant sharp concussive crack, huge deep bass WHUMP, rolling fiery roar and heavy debris clanging down, fading into a short low rumbling tail. Punchy PS3 era action game scale, rich broadband detail without distortion. No music, no voices, no repeated blasts."
+    },
+    {
+      "id": "debris",
+      "duration": 2.3,
+      "prompt": "Loose pieces of car bodywork and a detached wheel land on concrete after a crash. Several irregular chunky metallic clangs, skittering shards, rubber wheel bounce and a final tiny comic ping. Dry close Foley, no explosion, no voice or music."
+    },
+    {
+      "id": "fire-loop",
+      "duration": 6,
+      "loop": true,
+      "prompt": "Seamless steady loop of a burning wrecked car: low soft flames roaring, crisp irregular crackling, occasional tiny sparks and quiet metal ticking as it cools. Close perspective, no large explosions, no music, no siren, no speech. Continuous texture without a beginning or ending."
+    }
+  ],
+  "voices": [
+    {
+      "id": "pilot-oh-no",
+      "role": "pilot",
+      "text": "[panicked][shouting] OH NO! OH NO, NO, NO!"
+    },
+    {
+      "id": "pilot-scream",
+      "role": "pilot",
+      "text": "[screaming] AAAAAAAAH! AAAAAAAAH!"
+    },
+    {
+      "id": "pilot-controls",
+      "role": "pilot",
+      "text": "[panicked][shouting] WHICH ONE IS DOWN?!"
+    },
+    {
+      "id": "pilot-insurance",
+      "role": "pilot",
+      "text": "[stressed][shouting] THAT WAS A LOAD-BEARING GARAGE!"
+    },
+    {
+      "id": "pilot-landing",
+      "role": "pilot",
+      "text": "[panicked][shouting] I CAN STILL LAND THIS! I CAN STILL LAND THIS!"
+    },
+    {
+      "id": "pilot-regret",
+      "role": "pilot",
+      "text": "[stressed][shouting] I HAVE MADE A TERRIBLE PURCHASE!"
+    },
+    {
+      "id": "pilot-flip",
+      "role": "pilot",
+      "text": "[panicked][shouting] THE SKY IS IN THE WRONG PLACE!"
+    },
+    {
+      "id": "mission-start",
+      "role": "mission",
+      "text": "[stressed][shouting] FLIGHT CONTROLS ON! NOBODY PANIC!"
+    },
+    {
+      "id": "mission-fail",
+      "role": "mission",
+      "text": "[stressed][shouting] EXCELLENT DATA! TERRIBLE PARKING!"
+    },
+    {
+      "id": "mission-win",
+      "role": "mission",
+      "text": "[panicked][shouting] LANDING DETECTED! LEGAL HAS BEEN NOTIFIED!"
+    }
+  ],
+  "music": [
+    {
+      "id": "music-menu",
+      "duration": 32,
+      "prompt": "Original instrumental game menu music for an absurd luxury rocket car test program. Immaculately expensive futuristic lounge-funk with sleek analog synth chords, a deliciously rubbery electric bass groove, dry brushed drum machine and tiny cheeky marimba accents. Effortlessly cool on the surface, subtly ridiculous underneath. 104 BPM. Sophisticated polished console game soundtrack, absolutely no vocals or spoken words. A satisfying repeating groove with no big introduction, no final crash, and a smooth ending that can crossfade back into the opening. Keep midrange clear for character dialogue."
+    },
+    {
+      "id": "music-drive",
+      "duration": 48,
+      "prompt": "Original instrumental banger for a chaotic physics car videogame. 138 BPM punchy electro-funk breakbeat, huge rubbery distorted bass riff, tight crunchy drums, bright mischievous synth stabs, playful little cowbell fills and a memorable two-bar hook. The energy of a wildly overconfident rocket car test driver, fast, funny and genuinely catchy without sounding like circus music. Polished PS3 era arcade racing soundtrack. Absolutely no singing, no speech, no sampled voices. Start the groove immediately, varied short fills, consistent driving energy, no long build or dramatic final ending; designed to loop with a brief crossfade. Leave space for crashes and panicked dialogue."
+    },
+    {
+      "id": "music-ramp",
+      "duration": 42,
+      "prompt": "Original instrumental soundtrack for a ludicrous rocket sports car inversion stunt. 148 BPM propulsive electro breakbeat, swaggering buzzy bass ostinato, exciting clipped synth brass stabs and crisp racing percussion. Heroic aerospace test music that takes itself a little too seriously, with an occasional hilariously ill-timed tiny woodblock fill. Memorable catchy riff, punchy polished arcade console game production, tension and momentum with a playful edge. No voices, no lyrics, no singing. Immediate rhythmic groove, no slow intro, no finale, ending blends naturally into the start for a gameplay loop; leave space for sound effects."
+    }
+  ]
+}

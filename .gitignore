@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.DS_Store
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+playwright-report/
+test-results/
+# Local visual QA evidence; install screenshots ship from public/screenshots/.
+reference/qa/

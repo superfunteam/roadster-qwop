@@ -1,0 +1,31 @@
+/* Share the visible viewport between WebGL and the interface when mobile
+   browser chrome expands, collapses, or changes orientation. */
+#game-canvas,
+#app,
+#loading,
+.modal-backdrop {
+  inset: 0 0 auto;
+  height: var(--game-height, 100dvh);
+}
+
+body {
+  touch-action: manipulation;
+}
+
+#game-canvas,
+[data-control] {
+  touch-action: none;
+}
+
+.dialog {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dialog button,
+.dialog label,
+.dialog select,
+.dialog input {
+  touch-action: pan-y;
+}

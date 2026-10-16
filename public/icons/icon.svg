@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <clipPath id="clip"><rect width="512" height="512" rx="106"/></clipPath>
+    <linearGradient id="tile" x2="0" y2="1"><stop stop-color="#1b2028"/><stop offset="1" stop-color="#07090d"/></linearGradient>
+    <linearGradient id="mark" x2=".2" y2="1"><stop stop-color="#ffffff"/><stop offset=".58" stop-color="#f0f3f4"/><stop offset="1" stop-color="#a9b4bd"/></linearGradient>
+    <linearGradient id="flame" x2="0" y2="1"><stop stop-color="#dbfaff"/><stop offset=".24" stop-color="#80dfff"/><stop offset="1" stop-color="#0f487c" stop-opacity="0"/></linearGradient>
+    <radialGradient id="red"><stop stop-color="#e82127" stop-opacity=".36"/><stop offset="1" stop-color="#e82127" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g clip-path="url(#clip)">
+  <rect width="512" height="512" rx="106" fill="url(#tile)"/>
+  <ellipse cx="256" cy="90" rx="238" ry="155" fill="url(#red)"/>
+  <path d="M120 150 Q256 96 392 150 L380 179 Q256 130 132 179Z" fill="url(#mark)"/>
+  <path d="M147 191 Q256 152 365 191 L340 229 Q308 208 278 205 L256 359 L234 205 Q204 208 172 229Z" fill="url(#mark)"/>
+  <path d="M181 360 L192 360 L190 425 L184 447Z M226 379 L236 379 L234 440 L230 456Z M276 379 L286 379 L282 456 L278 440Z M320 360 L331 360 L328 447 L322 425Z" fill="url(#flame)"/>
+  <path d="M140 470H372" stroke="#e82127" stroke-width="3" opacity=".75"/>
+  </g>
+</svg>

@@ -1,0 +1,26 @@
+{
+  "name": "roadster-flight-test",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node --test tests/*.test.js",
+    "test:browser": "playwright test tests/browser.spec.js",
+    "test:audio": "playwright test tests/audio.spec.js",
+    "test:pwa": "playwright test tests/pwa.spec.js",
+    "test:player": "playwright test tests/player.spec.js",
+    "test:responsive": "playwright test tests/responsive.spec.js",
+    "test:flight": "playwright test tests/flight.spec.js"
+  },
+  "dependencies": {
+    "three": "^0.180.0",
+    "cannon-es": "^0.20.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.9",
+    "@playwright/test": "^1.56.0"
+  }
+}

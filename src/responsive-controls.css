@@ -1,0 +1,534 @@
+/* Comfortable, safe-area-aware controls for the full game. The embedded
+   player has its own viewport and deliberately keeps its separate layout. */
+html:not([data-player="true"]) {
+  --hud-left: max(16px, env(safe-area-inset-left));
+  --hud-right: max(16px, env(safe-area-inset-right));
+  --hud-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html:not([data-player="true"]) .hud-top .icon-button,
+html:not([data-player="true"]) .game-toolbar button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+html:not([data-player="true"]) .drive-controls button {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+html:not([data-player="true"]) .rear-boost {
+  min-height: 44px;
+}
+
+html:not([data-player="true"]) .game-toolbar {
+  bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+/* Phones and portrait tablets keep the four independent jets in a single
+   thumb-friendly row. Drive and telemetry sit immediately above the dock. */
+@media (max-width: 900px) and (orientation: portrait) {
+  html:not([data-player="true"]) {
+    --control-dock-bottom: calc(58px + var(--hud-bottom));
+    --control-dock-height: 154px;
+    --secondary-controls-bottom: calc(var(--control-dock-bottom) + var(--control-dock-height) + 14px);
+  }
+
+  html:not([data-player="true"]) .hud-top {
+    top: calc(58px + env(safe-area-inset-top));
+    left: var(--hud-left);
+    right: var(--hud-right);
+    gap: 12px;
+  }
+
+  html:not([data-player="true"]) .mission-title {
+    min-width: 0;
+    flex: 1;
+  }
+
+  html:not([data-player="true"]) .mission-title .eyebrow {
+    font-size: 8px;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+  }
+
+  html:not([data-player="true"]) .mission-title h2 {
+    font-size: clamp(20px, 5.7vw, 28px);
+    line-height: 1.12;
+    margin-top: 5px;
+    overflow-wrap: normal;
+  }
+
+  html:not([data-player="true"]) .mission-title > p:last-child {
+    font-size: 11px;
+    line-height: 1.45;
+    max-width: 32ch;
+    margin-top: 7px;
+  }
+
+  html:not([data-player="true"]) .hud-top-right {
+    flex: 0 0 auto;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  html:not([data-player="true"]) .time-display {
+    padding-top: 3px;
+  }
+
+  html:not([data-player="true"]) .time-display .eyebrow {
+    font-size: 7px;
+    line-height: 1.5;
+  }
+
+  html:not([data-player="true"]) .time-display > div {
+    font-size: 16px;
+    letter-spacing: 0;
+    margin-top: 5px;
+  }
+
+  html:not([data-player="true"]) .booster-console {
+    left: 50%;
+    bottom: var(--control-dock-bottom);
+    width: min(calc(100% - var(--hud-left) - var(--hud-right)), 480px);
+    max-width: none;
+    height: var(--control-dock-height);
+    padding: 10px;
+  }
+
+  html:not([data-player="true"]) .console-heading {
+    height: 10px;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+
+  html:not([data-player="true"]) .console-heading > p {
+    font-size: 8px;
+  }
+
+  html:not([data-player="true"]) .booster-row,
+  html:not([data-player="true"]) .jet-pair {
+    gap: 8px;
+  }
+
+  html:not([data-player="true"]) .car-diagram {
+    display: none;
+  }
+
+  html:not([data-player="true"]) .jet-button {
+    min-width: 44px;
+    height: 62px;
+    min-height: 62px;
+    padding: 7px 2px 5px;
+  }
+
+  html:not([data-player="true"]) .jet-key {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  html:not([data-player="true"]) .jet-label {
+    font-size: 8px;
+    margin-top: 5px;
+  }
+
+  html:not([data-player="true"]) .jet-meter {
+    margin-top: 6px;
+  }
+
+  html:not([data-player="true"]) .rear-boost {
+    height: 44px;
+    margin-top: 8px;
+    font-size: 9px;
+  }
+
+  html:not([data-player="true"]) .drive-controls {
+    right: var(--hud-right);
+    bottom: var(--secondary-controls-bottom);
+  }
+
+  html:not([data-player="true"]) .drive-controls p {
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+
+  html:not([data-player="true"]) .drive-controls button {
+    margin: 2px;
+    font-size: 23px;
+  }
+
+  html:not([data-player="true"]) .telemetry {
+    left: var(--hud-left);
+    bottom: var(--secondary-controls-bottom);
+    max-width: calc(100% - var(--hud-left) - var(--hud-right) - 156px);
+    gap: 10px;
+    padding: 9px 10px;
+    background: #08111bd9;
+    border: 1px solid #ffffff20;
+    border-radius: 5px;
+    backdrop-filter: blur(8px);
+  }
+
+  html:not([data-player="true"]) .speed-readout b {
+    font-size: 38px;
+  }
+
+  html:not([data-player="true"]) .speed-readout p {
+    font-size: 8px;
+    margin-top: 5px;
+  }
+
+  html:not([data-player="true"]) .telemetry-detail {
+    padding-left: 10px;
+    gap: 7px;
+  }
+
+  html:not([data-player="true"]) .telemetry-detail p {
+    font-size: 7px;
+    letter-spacing: 0.04em;
+    margin-bottom: 3px;
+  }
+
+  html:not([data-player="true"]) .telemetry-detail b {
+    font-size: 14px;
+  }
+
+  html:not([data-player="true"]) .flight-status {
+    left: var(--hud-left);
+    bottom: calc(var(--secondary-controls-bottom) + 98px);
+    max-width: calc(100% - var(--hud-left) - var(--hud-right) - 156px);
+    gap: 6px;
+  }
+
+  html:not([data-player="true"]) .status-dot {
+    flex-shrink: 0;
+  }
+
+  html:not([data-player="true"]) .flight-status p {
+    font-size: 8px;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+  }
+
+  html:not([data-player="true"]) .game-toolbar {
+    left: var(--hud-left);
+    right: var(--hud-right);
+    bottom: calc(7px + var(--hud-bottom));
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  html:not([data-player="true"]) .game-toolbar button {
+    padding: 8px 2px;
+    font-size: 11px;
+    gap: 6px;
+  }
+
+  html:not([data-player="true"]) .game-toolbar svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  html:not([data-player="true"]) .flight-tip {
+    bottom: calc(var(--secondary-controls-bottom) + 128px);
+    left: var(--hud-left);
+    right: var(--hud-right);
+    max-width: none;
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  html:not([data-player="true"]) #game-message {
+    top: 35%;
+    max-width: calc(100% - 32px);
+  }
+}
+
+/* A short phone needs the central view more than a persistent tutorial. */
+@media (max-width: 900px) and (orientation: portrait) and (max-height: 740px) {
+  html:not([data-player="true"]) .flight-tip {
+    display: none;
+  }
+}
+
+/* Short landscape screens use separate left and right docks, leaving the
+   middle of the screen clear. All held controls retain a 44px target. */
+@media (orientation: landscape) and (max-height: 600px) {
+  html:not([data-player="true"]) {
+    --landscape-dock-bottom: calc(54px + var(--hud-bottom));
+  }
+
+  html:not([data-player="true"]) .hud-top {
+    top: calc(46px + env(safe-area-inset-top));
+    left: var(--hud-left);
+    right: var(--hud-right);
+    gap: 20px;
+  }
+
+  html:not([data-player="true"]) .mission-title {
+    max-width: calc(100% - 180px);
+    min-width: 0;
+  }
+
+  html:not([data-player="true"]) .mission-title .eyebrow {
+    font-size: 8px;
+    line-height: 1.4;
+    letter-spacing: 0.06em;
+  }
+
+  html:not([data-player="true"]) .mission-title h2 {
+    font-size: 20px;
+    line-height: 1.15;
+    margin-top: 3px;
+  }
+
+  html:not([data-player="true"]) .mission-title > p:last-child {
+    max-width: 39ch;
+    font-size: 11px;
+    line-height: 1.4;
+    margin-top: 4px;
+  }
+
+  html:not([data-player="true"]) .hud-top-right {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  html:not([data-player="true"]) .time-display .eyebrow {
+    font-size: 7px;
+  }
+
+  html:not([data-player="true"]) .time-display > div {
+    font-size: 16px;
+    margin-top: 4px;
+  }
+
+  html:not([data-player="true"]) .booster-console {
+    left: var(--hud-left);
+    bottom: var(--landscape-dock-bottom);
+    transform: none;
+    width: clamp(280px, 53vw, 420px);
+    max-width: calc(100% - var(--hud-left) - var(--hud-right) - 166px);
+    height: 134px;
+    padding: 8px 10px;
+  }
+
+  html:not([data-player="true"]) .console-heading {
+    height: 10px;
+    margin-bottom: 6px;
+  }
+
+  html:not([data-player="true"]) .console-heading > p {
+    font-size: 8px;
+  }
+
+  html:not([data-player="true"]) .booster-row,
+  html:not([data-player="true"]) .jet-pair {
+    gap: 8px;
+  }
+
+  html:not([data-player="true"]) .car-diagram {
+    display: none;
+  }
+
+  html:not([data-player="true"]) .jet-button {
+    min-width: 44px;
+    min-height: 50px;
+    height: 50px;
+    padding: 4px 2px;
+  }
+
+  html:not([data-player="true"]) .jet-key {
+    font-size: 19px;
+    line-height: 1;
+  }
+
+  html:not([data-player="true"]) .jet-label {
+    font-size: 8px;
+    margin-top: 4px;
+  }
+
+  html:not([data-player="true"]) .jet-meter {
+    margin-top: 4px;
+  }
+
+  html:not([data-player="true"]) .rear-boost {
+    height: 44px;
+    margin-top: 6px;
+    font-size: 9px;
+  }
+
+  html:not([data-player="true"]) .drive-controls {
+    right: var(--hud-right);
+    bottom: var(--landscape-dock-bottom);
+  }
+
+  html:not([data-player="true"]) .drive-controls p {
+    font-size: 8px;
+    line-height: 1.4;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+
+  html:not([data-player="true"]) .drive-controls button {
+    margin: 2px;
+    font-size: 23px;
+  }
+
+  html:not([data-player="true"]) .telemetry {
+    left: auto;
+    right: var(--hud-right);
+    bottom: calc(var(--landscape-dock-bottom) + 126px);
+    gap: 12px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    border: 1px solid #ffffff20;
+    background: #08111bd9;
+    backdrop-filter: blur(8px);
+  }
+
+  html:not([data-player="true"]) .speed-readout {
+    flex-direction: row;
+    gap: 5px;
+    align-items: baseline;
+  }
+
+  html:not([data-player="true"]) .speed-readout b {
+    font-size: 28px;
+  }
+
+  html:not([data-player="true"]) .speed-readout p {
+    font-size: 7px;
+    letter-spacing: 0;
+    margin: 0;
+  }
+
+  html:not([data-player="true"]) .telemetry-detail {
+    flex-direction: row;
+    gap: 12px;
+    padding-left: 10px;
+  }
+
+  html:not([data-player="true"]) .telemetry-detail p {
+    font-size: 7px;
+    letter-spacing: 0.04em;
+    margin-bottom: 3px;
+  }
+
+  html:not([data-player="true"]) .telemetry-detail b {
+    font-size: 13px;
+  }
+
+  html:not([data-player="true"]) .telemetry-detail small {
+    font-size: 10px;
+  }
+
+  html:not([data-player="true"]) .flight-status {
+    left: var(--hud-left);
+    bottom: calc(var(--landscape-dock-bottom) + 143px);
+    max-width: 37%;
+  }
+
+  html:not([data-player="true"]) .flight-status p {
+    font-size: 8px;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+  }
+
+  html:not([data-player="true"]) .game-toolbar {
+    left: var(--hud-left);
+    right: var(--hud-right);
+    bottom: calc(4px + var(--hud-bottom));
+    justify-content: flex-start;
+    gap: 18px;
+  }
+
+  html:not([data-player="true"]) .game-toolbar button {
+    font-size: 11px;
+    gap: 6px;
+    padding: 6px 2px;
+  }
+
+  html:not([data-player="true"]) .game-toolbar svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  html:not([data-player="true"]) .flight-tip {
+    display: none;
+  }
+
+  html:not([data-player="true"]) #game-message {
+    top: calc(44px + env(safe-area-inset-top));
+    max-width: 35%;
+    font-size: 10px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 360px) {
+  html:not([data-player="true"]) .flight-status {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) and (orientation: portrait) {
+  html:not([data-player="true"]) .telemetry {
+    gap: 8px;
+    padding-inline: 8px;
+  }
+
+  html:not([data-player="true"]) .speed-readout b {
+    font-size: 32px;
+  }
+
+  html:not([data-player="true"]) .telemetry-detail {
+    padding-left: 8px;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 900px) and (orientation: portrait) {
+  html:not([data-player="true"]) {
+    --hud-left: max(4.5vw, env(safe-area-inset-left));
+    --hud-right: max(4.5vw, env(safe-area-inset-right));
+  }
+
+  html:not([data-player="true"]) .hud-top {
+    top: calc(88px + env(safe-area-inset-top));
+  }
+
+  html:not([data-player="true"]) .mission-title > p:last-child {
+    font-size: 13px;
+  }
+
+  html:not([data-player="true"]) .mission-title .eyebrow,
+  html:not([data-player="true"]) .time-display .eyebrow {
+    font-size: 9px;
+  }
+
+  html:not([data-player="true"]) .time-display > div {
+    font-size: 20px;
+  }
+
+  html:not([data-player="true"]) .jet-label,
+  html:not([data-player="true"]) .console-heading > p,
+  html:not([data-player="true"]) .drive-controls p,
+  html:not([data-player="true"]) .flight-status p {
+    font-size: 9px;
+  }
+
+  html:not([data-player="true"]) .telemetry-detail b {
+    font-size: 16px;
+  }
+
+  html:not([data-player="true"]) .telemetry-detail p {
+    font-size: 8px;
+  }
+
+  html:not([data-player="true"]) .flight-tip {
+    font-size: 12px;
+  }
+}

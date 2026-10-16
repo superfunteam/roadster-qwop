@@ -1,0 +1,755 @@
+/* Player cards share the game, but fit their controls inside the host's frame. */
+html[data-player="true"] #game-canvas,
+html[data-player="true"] #app,
+html[data-player="true"] #loading,
+html[data-player="true"] .modal-backdrop {
+  inset: 0 0 auto;
+  height: var(--game-height, 100dvh);
+}
+
+html[data-player="true"] #app {
+  container-type: size;
+}
+
+html[data-player="true"] .topbar,
+html[data-player="true"] .playing .topbar {
+  height: 44px;
+  padding: 0 12px;
+  gap: 12px;
+}
+
+html[data-player="true"] .tesla-wordmark,
+html[data-player="true"] .playing .tesla-wordmark {
+  width: 70px;
+  height: 14px;
+}
+
+html[data-player="true"] .brand {
+  padding: 14px 0;
+}
+
+html[data-player="true"] .player-full-link {
+  margin-left: auto;
+  padding: 14px 0;
+  color: #c5cbd5;
+  font-size: 10px;
+  line-height: 16px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+html[data-player="true"] .player-full-link:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+html[data-player="true"] .top-actions {
+  gap: 0;
+}
+
+html[data-player="true"] .icon-button {
+  width: 36px;
+  height: 36px;
+}
+
+html[data-player="true"] .program,
+html[data-player="true"] .spec-rail,
+html[data-player="true"] .hero-index,
+html[data-player="true"] .orbit-hint,
+html[data-player="true"] .hangar-footer,
+html[data-player="true"] .launch-note,
+html[data-player="true"] .launch-description,
+html[data-player="true"] .mission-topline,
+html[data-player="true"] #install-button,
+html[data-player="true"] [data-action="fullscreen"] {
+  display: none !important;
+}
+
+html[data-player="true"] .hero-copy {
+  top: 61px;
+}
+
+html[data-player="true"] .hero-copy .eyebrow {
+  font-size: 8px;
+}
+
+html[data-player="true"] .hero-copy h1 {
+  width: min(84%, 620px);
+  margin-top: 15px;
+}
+
+html[data-player="true"] .hero-tagline {
+  font-size: 14px;
+  margin-top: 14px;
+}
+
+html[data-player="true"] .mission-panel {
+  padding: 12px 14px 10px;
+  background: linear-gradient(0deg, #090b0efc 80%, #090b0e00);
+}
+
+html[data-player="true"] .mission-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 148px;
+  align-items: end;
+  gap: 14px;
+  padding-bottom: 0;
+}
+
+html[data-player="true"] .mission-grid {
+  gap: 8px;
+}
+
+html[data-player="true"] .mission {
+  min-height: 44px;
+}
+
+html[data-player="true"] .mission-image {
+  height: 46px;
+}
+
+html[data-player="true"] .mission-image > span {
+  left: 7px;
+  top: 6px;
+  font-size: 8px;
+}
+
+html[data-player="true"] .mission-image > i,
+html[data-player="true"] .mission-info p {
+  display: none;
+}
+
+html[data-player="true"] .mission-info {
+  padding: 9px 0;
+}
+
+html[data-player="true"] .mission-info h2 {
+  font-size: 11px;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+html[data-player="true"] .launch-panel {
+  gap: 0;
+}
+
+html[data-player="true"] .primary-button {
+  min-height: 44px;
+  padding: 12px 16px;
+  gap: 10px;
+  font-size: 12px;
+}
+
+html[data-player="true"] .player-controls-guide {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px 10px;
+  margin-top: 10px;
+  color: #9aa6b8;
+  font-size: 10px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+html[data-player="true"] .player-controls-guide b {
+  color: #e0e6ef;
+  font-weight: 500;
+}
+
+html[data-player="true"] .hud-top {
+  top: 52px;
+  left: 14px;
+  right: 14px;
+  gap: 12px;
+}
+
+html[data-player="true"] .mission-title .eyebrow {
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+html[data-player="true"] .mission-title h2 {
+  font-size: 21px;
+  margin-top: 4px;
+}
+
+html[data-player="true"] .mission-title > p:last-child {
+  font-size: 11px;
+  margin-top: 7px;
+  line-height: 1.4;
+  max-width: 34ch;
+}
+
+html[data-player="true"] .hud-top-right {
+  gap: 8px;
+}
+
+html[data-player="true"] .hud-top .icon-button {
+  width: 44px;
+  height: 44px;
+}
+
+html[data-player="true"] .time-display .eyebrow {
+  font-size: 7px;
+}
+
+html[data-player="true"] .time-display > div {
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+html[data-player="true"] .booster-console {
+  left: 14px;
+  bottom: 10px;
+  width: min(58%, 330px);
+  max-width: none;
+  padding: 9px;
+  transform: none;
+  border-radius: 5px;
+}
+
+html[data-player="true"] .console-heading {
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+html[data-player="true"] .console-heading > p {
+  font-size: 7px;
+  line-height: 10px;
+}
+
+html[data-player="true"] .booster-row,
+html[data-player="true"] .jet-pair {
+  gap: 5px;
+}
+
+html[data-player="true"] .car-diagram {
+  display: none;
+}
+
+html[data-player="true"] .jet-button {
+  min-height: 51px;
+  padding: 5px 2px;
+}
+
+html[data-player="true"] .jet-key {
+  font-size: 19px;
+  line-height: 22px;
+}
+
+html[data-player="true"] .jet-label {
+  font-size: 7px;
+  margin-top: 2px;
+}
+
+html[data-player="true"] .jet-meter {
+  margin: 4px 2px 0;
+}
+
+html[data-player="true"] .rear-boost {
+  min-height: 44px;
+  height: 44px;
+  margin-top: 6px;
+  font-size: 8px;
+}
+
+html[data-player="true"] .drive-controls {
+  right: 14px;
+  bottom: 10px;
+  display: grid;
+  grid-template-columns: 44px 44px;
+  grid-template-areas: "label label" "up brake" "left right";
+  gap: 5px;
+}
+
+html[data-player="true"] .drive-controls p {
+  grid-area: label;
+  margin: 0 0 2px;
+  font-size: 7px;
+  line-height: 10px;
+  letter-spacing: 0.05em;
+}
+
+html[data-player="true"] .drive-up,
+html[data-player="true"] .drive-row {
+  display: contents;
+}
+
+html[data-player="true"] .drive-controls button {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  border-radius: 4px;
+}
+
+html[data-player="true"] [data-control="throttle"] {
+  grid-area: up;
+}
+
+html[data-player="true"] [data-control="brake"] {
+  grid-area: brake;
+}
+
+html[data-player="true"] [data-control="left"] {
+  grid-area: left;
+}
+
+html[data-player="true"] [data-control="right"] {
+  grid-area: right;
+}
+
+html[data-player="true"] .telemetry {
+  top: 139px;
+  bottom: auto;
+  left: 14px;
+  gap: 12px;
+}
+
+html[data-player="true"] .speed-readout b {
+  font-size: 31px;
+}
+
+html[data-player="true"] .speed-readout p {
+  font-size: 7px;
+  margin-top: 4px;
+}
+
+html[data-player="true"] .telemetry-detail {
+  flex-direction: row;
+  gap: 12px;
+  padding-left: 12px;
+}
+
+html[data-player="true"] .telemetry-detail p {
+  font-size: 6px;
+}
+
+html[data-player="true"] .telemetry-detail b {
+  font-size: 13px;
+}
+
+html[data-player="true"] .flight-status {
+  left: 14px;
+  bottom: 181px;
+}
+
+html[data-player="true"] .flight-status p {
+  font-size: 7px;
+  letter-spacing: 0.08em;
+}
+
+html[data-player="true"] .game-toolbar {
+  left: auto;
+  right: 14px;
+  bottom: 125px;
+  gap: 5px;
+}
+
+html[data-player="true"] .game-toolbar button {
+  min-width: 44px;
+  height: 36px;
+  padding: 6px;
+  border-radius: 4px;
+  background: #101926ad;
+  border: 1px solid #ffffff26;
+  justify-content: center;
+  gap: 5px;
+}
+
+html[data-player="true"] .game-toolbar [data-action="camera"] span {
+  display: none;
+}
+
+html[data-player="true"] .flight-tip {
+  left: 14px;
+  right: auto;
+  bottom: 157px;
+  max-width: min(65%, 390px);
+  text-align: left;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+html[data-player="true"] #game-message {
+  top: 43%;
+  max-width: 80%;
+  padding: 7px 10px;
+  font-size: 10px;
+}
+
+html[data-player="true"] .modal-backdrop {
+  padding: 10px;
+}
+
+html[data-player="true"] .dialog {
+  max-height: calc(var(--game-height, 100dvh) - 20px);
+  width: 470px;
+  padding: 23px;
+  overscroll-behavior: contain;
+}
+
+html[data-player="true"] .dialog h2 {
+  font-size: 28px;
+  margin-top: 15px;
+}
+
+html[data-player="true"] .dialog > #dialog-content > .eyebrow {
+  padding-right: 24px;
+  font-size: 8px;
+}
+
+html[data-player="true"] .close-dialog {
+  top: 7px;
+  right: 7px;
+}
+
+html[data-player="true"] .dialog-intro {
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+html[data-player="true"] .dialog-buttons {
+  margin-top: 18px;
+  gap: 8px;
+}
+
+html[data-player="true"] .manual-layout {
+  grid-template-columns: 72px 1fr;
+  gap: 17px;
+  margin: 18px 0;
+}
+
+html[data-player="true"] .manual-list {
+  font-size: 11px;
+  gap: 8px;
+}
+
+html[data-player="true"] .settings-list {
+  margin: 15px 0;
+}
+
+html[data-player="true"] .settings-list label {
+  padding: 12px 0;
+  font-size: 12px;
+}
+
+html[data-player="true"] .settings-list span {
+  font-size: 10px;
+}
+
+html[data-player="true"] .result-stats {
+  padding: 14px 0;
+  margin-top: 15px;
+}
+
+html[data-player="true"] .result-stats b {
+  font-size: 21px;
+}
+
+html[data-player="true"] #toast {
+  top: 48px;
+  padding: 8px 12px;
+  font-size: 10px;
+}
+
+@media (max-width: 470px) {
+  html[data-player="true"] .topbar,
+  html[data-player="true"] .playing .topbar {
+    padding: 0 10px;
+    gap: 9px;
+  }
+
+  html[data-player="true"] .tesla-wordmark,
+  html[data-player="true"] .playing .tesla-wordmark {
+    width: 59px;
+  }
+
+  html[data-player="true"] .player-full-link {
+    font-size: 9px;
+  }
+
+  html[data-player="true"] .icon-button {
+    width: 33px;
+  }
+
+  html[data-player="true"] .mission-layout {
+    grid-template-columns: 1fr;
+    gap: 11px;
+  }
+
+  html[data-player="true"] .mission-image {
+    height: 53px;
+  }
+
+  html[data-player="true"] .mission-info h2 {
+    font-size: 11px;
+  }
+
+  html[data-player="true"] .player-controls-guide {
+    font-size: 9px;
+    gap: 0;
+    flex-direction: column;
+  }
+
+  html[data-player="true"] .hud-top {
+    top: 47px;
+    left: 10px;
+    right: 10px;
+  }
+
+  html[data-player="true"] .mission-title h2 {
+    font-size: 18px;
+  }
+
+  html[data-player="true"] .mission-title > p:last-child {
+    max-width: 22ch;
+    font-size: 10px;
+  }
+
+  html[data-player="true"] .time-display {
+    display: none;
+  }
+
+  html[data-player="true"] .booster-console {
+    left: 8px;
+    bottom: 8px;
+    width: calc(100% - 116px);
+    padding: 6px;
+  }
+
+  html[data-player="true"] .booster-row,
+  html[data-player="true"] .jet-pair {
+    gap: 3px;
+  }
+
+  html[data-player="true"] .console-heading {
+    gap: 4px;
+    margin-bottom: 5px;
+  }
+
+  html[data-player="true"] .console-heading > p {
+    font-size: 6px;
+    letter-spacing: 0;
+  }
+
+  html[data-player="true"] .jet-button {
+    min-height: 47px;
+    padding: 4px 0;
+  }
+
+  html[data-player="true"] .jet-label {
+    font-size: 6px;
+    letter-spacing: 0;
+  }
+
+  html[data-player="true"] .drive-controls {
+    right: 8px;
+    bottom: 8px;
+  }
+
+  html[data-player="true"] .game-toolbar {
+    right: 8px;
+    bottom: 124px;
+  }
+
+  html[data-player="true"] .game-toolbar button {
+    height: 36px;
+  }
+
+  html[data-player="true"] .game-toolbar span {
+    display: none;
+  }
+
+  html[data-player="true"] .telemetry {
+    top: 136px;
+    left: 10px;
+  }
+
+  html[data-player="true"] .flight-status {
+    left: 10px;
+    bottom: 182px;
+  }
+
+  html[data-player="true"] .flight-tip {
+    left: 10px;
+    bottom: 148px;
+    max-width: calc(100% - 124px);
+    font-size: 8px;
+  }
+}
+
+/* Some hosts render the same card at half size. Keep nine physical controls. */
+@container (max-height: 340px) {
+  html[data-player="true"] .topbar,
+  html[data-player="true"] .playing .topbar {
+    height: 35px;
+  }
+
+  html[data-player="true"] .brand,
+  html[data-player="true"] .player-full-link {
+    padding-block: 9px;
+  }
+
+  html[data-player="true"] .hero-copy {
+    top: 45px;
+  }
+
+  html[data-player="true"] .hero-copy .eyebrow,
+  html[data-player="true"] .hero-tagline {
+    display: none;
+  }
+
+  html[data-player="true"] .hero-copy h1 {
+    margin-top: 0;
+  }
+
+  html[data-player="true"] .mission-panel {
+    padding: 8px 10px 6px;
+  }
+
+  html[data-player="true"] .mission-layout {
+    gap: 6px;
+    grid-template-columns: minmax(0, 1fr) 80px;
+    align-items: stretch;
+  }
+
+  html[data-player="true"] .mission-image {
+    display: none;
+  }
+
+  html[data-player="true"] .mission {
+    border: 1px solid #ffffff28;
+    border-radius: 3px;
+    background: #121921c9;
+    min-height: 52px;
+  }
+
+  html[data-player="true"] .mission.selected {
+    border-color: #9ea8b5;
+  }
+
+  html[data-player="true"] .mission-info {
+    padding: 8px 6px;
+  }
+
+  html[data-player="true"] .mission-info h2 {
+    font-size: 10px;
+  }
+
+  html[data-player="true"] .launch-panel .primary-button {
+    height: 100%;
+    padding: 8px;
+    justify-content: center;
+    font-size: 11px;
+  }
+
+  html[data-player="true"] .launch-panel .primary-button svg {
+    display: none;
+  }
+
+  html[data-player="true"] .mission-line {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  html[data-player="true"] .player-controls-guide {
+    font-size: 8px;
+    line-height: 1.3;
+    margin-top: 5px;
+  }
+
+  html[data-player="true"] .hud-top {
+    top: 38px;
+  }
+
+  html[data-player="true"] .mission-title h2 {
+    font-size: 15px;
+    margin-top: 0;
+  }
+
+  html[data-player="true"] .mission-title > p,
+  html[data-player="true"] .time-display,
+  html[data-player="true"] .flight-status,
+  html[data-player="true"] .flight-tip {
+    display: none;
+  }
+
+  html[data-player="true"] .hud-top .icon-button {
+    width: 36px;
+    height: 36px;
+    margin-top: -3px;
+  }
+
+  html[data-player="true"] .telemetry {
+    top: 66px;
+  }
+
+  html[data-player="true"] .speed-readout b {
+    font-size: 21px;
+  }
+
+  html[data-player="true"] .speed-readout p {
+    margin-top: 1px;
+  }
+
+  html[data-player="true"] .telemetry-detail {
+    gap: 8px;
+    padding-left: 8px;
+  }
+
+  html[data-player="true"] .telemetry-detail b {
+    font-size: 11px;
+  }
+
+  html[data-player="true"] .game-toolbar {
+    bottom: auto;
+    top: 79px;
+  }
+
+  html[data-player="true"] .game-toolbar button {
+    height: 32px;
+  }
+
+  html[data-player="true"] #game-message {
+    top: 97px;
+    font-size: 8px;
+    padding: 3px 6px;
+  }
+
+  html[data-player="true"] .dialog {
+    padding: 16px;
+  }
+
+  html[data-player="true"] .dialog h2 {
+    font-size: 22px;
+    margin-top: 10px;
+  }
+
+  html[data-player="true"] [data-kind="pause"] .dialog {
+    padding: 12px;
+  }
+
+  html[data-player="true"] [data-kind="pause"] .dialog h2 {
+    font-size: 20px;
+    margin-top: 6px;
+  }
+
+  html[data-player="true"] [data-kind="pause"] .dialog-intro {
+    display: none;
+  }
+
+  html[data-player="true"] [data-kind="pause"] .dialog-buttons {
+    margin-top: 12px;
+    gap: 6px;
+  }
+
+  html[data-player="true"] [data-kind="pause"] .secondary-button,
+  html[data-player="true"] [data-kind="pause"] .text-button {
+    min-height: 40px;
+    padding: 9px;
+    font-size: 12px;
+  }
+}

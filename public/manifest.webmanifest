@@ -1,0 +1,105 @@
+{
+  "id": "/",
+  "name": "Roadster \u2014 But Can It Fly?",
+  "short_name": "Roadster",
+  "description": "Four rocket boosters. One very expensive experiment. A beautifully unhinged 3D driving game controlled with Q, W, O and P.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#090c10",
+  "theme_color": "#090c10",
+  "orientation": "any",
+  "lang": "en",
+  "categories": [
+    "games",
+    "entertainment"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1440x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Roadster interactive showroom and flight test selection"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Roadster mobile showroom and flight test selection"
+    }
+  ],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "The garage",
+      "short_name": "Garage",
+      "description": "Get out of the garage. Preferably with the garage.",
+      "url": "/?test=garage",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "The quarter mile",
+      "short_name": "Drag strip",
+      "description": "A rocket-powered quarter-mile run.",
+      "url": "/?test=drag",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "The inversion",
+      "short_name": "Inversion",
+      "description": "Ride the curve, rotate, and land.",
+      "url": "/?test=ramp",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

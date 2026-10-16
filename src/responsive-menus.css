@@ -1,0 +1,523 @@
+/* Keep the full game's menus comfortable on phones and tablets. The compact
+   social player has its own layout in embed.css. */
+html:not([data-player="true"]) .topbar {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: max(4.5vw, env(safe-area-inset-left, 0px));
+  padding-right: max(4.5vw, env(safe-area-inset-right, 0px));
+  height: calc(96px + env(safe-area-inset-top, 0px));
+}
+
+html:not([data-player="true"]) .topbar .icon-button,
+html:not([data-player="true"]) .brand {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+html:not([data-player="true"]) .mission-info h2 {
+  white-space: normal;
+  text-wrap: balance;
+  font-size: 16px;
+}
+
+html:not([data-player="true"]) .modal-backdrop {
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+}
+
+html:not([data-player="true"]) .dialog {
+  max-height: calc(var(--game-height, 100dvh) - max(12px, env(safe-area-inset-top, 0px)) - max(12px, env(safe-area-inset-bottom, 0px)));
+  scrollbar-width: thin;
+  scrollbar-color: #657386 transparent;
+  scroll-padding-block: 20px;
+}
+
+html:not([data-player="true"]) .close-dialog {
+  width: 44px;
+  height: 44px;
+  top: 8px;
+  right: 8px;
+}
+
+html:not([data-player="true"]) .dialog > #dialog-content > .eyebrow {
+  padding-right: 30px;
+}
+
+html:not([data-player="true"]) .dialog :is(.primary-button, .secondary-button, .text-button) {
+  min-height: 48px;
+  font-size: 14px;
+}
+
+html:not([data-player="true"]) .dialog-intro,
+html:not([data-player="true"]) .install-instructions {
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+html:not([data-player="true"]) .settings-list label {
+  min-height: 64px;
+  font-size: 16px;
+  pointer-events: auto;
+}
+
+html:not([data-player="true"]) .settings-list span {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+html:not([data-player="true"]) .settings-list input {
+  width: 22px;
+  height: 22px;
+  margin: 0 8px;
+}
+
+html:not([data-player="true"]) .settings-list select {
+  min-height: 44px;
+  max-width: 100%;
+  font-size: 16px;
+}
+
+html:not([data-player="true"]) .manual-list {
+  font-size: 16px;
+  gap: 14px;
+}
+
+html:not([data-player="true"]) .manual-list b {
+  font-size: 13px;
+}
+
+html:not([data-player="true"]) .manual-footnote {
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+html:not([data-player="true"]) .result-stats > div {
+  min-width: 0;
+}
+
+/* Tablet portrait uses the same intentional vertical composition as a phone:
+   title, unobstructed car, three tests, then the launch action. */
+@media (max-width: 1024px) and (orientation: portrait) {
+  html:not([data-player="true"]) .program,
+  html:not([data-player="true"]) .spec-rail,
+  html:not([data-player="true"]) .hero-index {
+    display: none;
+  }
+
+  html:not([data-player="true"]) .hero-copy {
+    top: max(calc(88px + env(safe-area-inset-top, 0px)), 12%);
+  }
+
+  html:not([data-player="true"]) .hero-copy h1 {
+    width: 88vw;
+    margin-top: 20px;
+  }
+
+  html:not([data-player="true"]) .mission-panel {
+    padding-inline: max(5vw, env(safe-area-inset-left, 0px)) max(5vw, env(safe-area-inset-right, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  html:not([data-player="true"]) .mission-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  html:not([data-player="true"]) .mission-grid {
+    gap: 12px;
+  }
+
+  html:not([data-player="true"]) .mission-image {
+    height: clamp(62px, 10vw, 96px);
+  }
+
+  html:not([data-player="true"]) .mission-info h2 {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+
+  html:not([data-player="true"]) .mission-info p {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  html:not([data-player="true"]) .launch-description {
+    display: none;
+  }
+
+  html:not([data-player="true"]) .launch-panel {
+    gap: 12px;
+  }
+
+  html:not([data-player="true"]) .launch-panel .primary-button {
+    min-height: 52px;
+    font-size: 15px;
+  }
+
+  html:not([data-player="true"]) .hangar-footer {
+    height: 44px;
+    margin-top: 15px;
+  }
+
+  html:not([data-player="true"]) .orbit-hint {
+    bottom: 36%;
+  }
+}
+
+@media (max-width: 760px) {
+  html:not([data-player="true"]) .topbar {
+    height: calc(70px + env(safe-area-inset-top, 0px));
+    padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  html:not([data-player="true"]) .top-actions {
+    gap: 0;
+  }
+
+  html:not([data-player="true"]) .topbar .icon-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  html:not([data-player="true"]) .mission-topline .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.16em;
+  }
+
+  html:not([data-player="true"]) .mission-grid {
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  html:not([data-player="true"]) .mission {
+    display: flex;
+    flex-direction: column;
+  }
+
+  html:not([data-player="true"]) .mission-image {
+    width: 100%;
+    flex-shrink: 0;
+  }
+
+  html:not([data-player="true"]) .mission-info {
+    width: 100%;
+    padding: 10px 0 12px;
+    flex: 1;
+  }
+
+  html:not([data-player="true"]) .mission-info h2 {
+    font-size: 14px;
+    min-height: 2.5em;
+  }
+
+  html:not([data-player="true"]) .mission-info p {
+    font-size: 11px;
+    line-height: 1.4;
+    max-width: none;
+  }
+
+  html:not([data-player="true"]) .mission-line {
+    width: 100%;
+    flex-shrink: 0;
+  }
+
+  html:not([data-player="true"]) .orbit-hint {
+    bottom: 43%;
+    font-size: 8px;
+  }
+
+  html:not([data-player="true"]) .dialog {
+    padding: 30px 24px 24px;
+  }
+
+  html:not([data-player="true"]) .dialog h2 {
+    font-size: clamp(28px, 7.5vw, 36px);
+    line-height: 1.15;
+    margin-top: 18px;
+    overflow-wrap: break-word;
+  }
+
+  html:not([data-player="true"]) .dialog > #dialog-content > .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    line-height: 1.6;
+  }
+
+  html:not([data-player="true"]) .dialog-buttons {
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  html:not([data-player="true"]) .manual-layout {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  html:not([data-player="true"]) .result-stats {
+    gap: 8px;
+    padding-block: 20px;
+  }
+
+  html:not([data-player="true"]) .result-stats b {
+    font-size: clamp(22px, 6vw, 28px);
+    overflow-wrap: anywhere;
+  }
+
+  html:not([data-player="true"]) .result-stats small {
+    display: block;
+    margin: 4px 0 0;
+    font-size: 11px;
+  }
+
+  html:not([data-player="true"]) .result-stats p {
+    font-size: 9px;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+  }
+}
+
+@media (max-width: 370px) {
+  html:not([data-player="true"]) .dialog {
+    padding-inline: 20px;
+  }
+
+  html:not([data-player="true"]) .manual-layout {
+    grid-template-columns: 62px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  html:not([data-player="true"]) .settings-list label {
+    column-gap: 10px;
+  }
+
+  html:not([data-player="true"]) .settings-list select {
+    max-width: 142px;
+    padding-inline: 6px;
+  }
+}
+
+/* A short portrait phone needs more of its screen for the car. Keep every
+   test and the primary action; remove only the supporting decoration. */
+@media (max-width: 760px) and (max-height: 700px) and (orientation: portrait) {
+  html:not([data-player="true"]) .mission-panel {
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
+
+  html:not([data-player="true"]) .mission-topline {
+    margin-bottom: 10px;
+  }
+
+  html:not([data-player="true"]) .mission-image {
+    height: 48px;
+  }
+
+  html:not([data-player="true"]) .mission-layout {
+    gap: 12px;
+  }
+
+  html:not([data-player="true"]) .mission-info {
+    padding-block: 8px;
+  }
+
+  html:not([data-player="true"]) .mission-info p,
+  html:not([data-player="true"]) .launch-note,
+  html:not([data-player="true"]) .hangar-footer,
+  html:not([data-player="true"]) .orbit-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) and (max-height: 560px) and (orientation: portrait) {
+  html:not([data-player="true"]) .hero-copy {
+    top: calc(76px + env(safe-area-inset-top, 0px));
+  }
+
+  html:not([data-player="true"]) .hero-copy .eyebrow {
+    display: none;
+  }
+
+  html:not([data-player="true"]) .hero-copy h1 {
+    margin-top: 0;
+  }
+
+  html:not([data-player="true"]) .hero-tagline {
+    margin-top: 12px;
+    font-size: 14px;
+  }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  html:not([data-player="true"]) .topbar {
+    height: calc(48px + env(safe-area-inset-top, 0px));
+    padding-inline: max(20px, env(safe-area-inset-left, 0px)) max(20px, env(safe-area-inset-right, 0px));
+  }
+
+  html:not([data-player="true"]) .top-actions {
+    gap: 0;
+  }
+
+  html:not([data-player="true"]) .program {
+    display: none;
+  }
+
+  html:not([data-player="true"]) .hero-copy {
+    top: calc(54px + env(safe-area-inset-top, 0px));
+  }
+
+  html:not([data-player="true"]) .hero-copy h1 {
+    width: min(66vw, 680px);
+    margin-top: 0;
+  }
+
+  html:not([data-player="true"]) .hero-tagline {
+    font-size: 14px;
+    margin-top: 10px;
+  }
+
+  html:not([data-player="true"]) .mission-panel {
+    padding-inline: max(20px, env(safe-area-inset-left, 0px)) max(20px, env(safe-area-inset-right, 0px));
+  }
+
+  html:not([data-player="true"]) .mission-layout {
+    grid-template-columns: minmax(0, 1fr) 156px;
+    gap: 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  }
+
+  html:not([data-player="true"]) .mission-grid {
+    gap: 10px;
+  }
+
+  html:not([data-player="true"]) .mission-image {
+    height: 39px;
+  }
+
+  html:not([data-player="true"]) .mission-info {
+    padding-block: 8px;
+  }
+
+  html:not([data-player="true"]) .mission-info h2 {
+    min-height: 2.5em;
+    font-size: 14px;
+    line-height: 1.25;
+  }
+
+  html:not([data-player="true"]) .launch-panel .primary-button {
+    min-height: 48px;
+    font-size: 14px;
+    padding-inline: 16px;
+    gap: 12px;
+  }
+
+  html:not([data-player="true"]) .dialog {
+    padding: 26px 28px;
+  }
+
+  html:not([data-player="true"]) .dialog h2 {
+    font-size: 30px;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="pause"] .dialog {
+    width: 600px;
+    padding-block: 24px;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="pause"] .dialog h2 {
+    margin-top: 10px;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="pause"] .dialog-intro {
+    margin-top: 8px;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="pause"] .dialog-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="pause"] .dialog-buttons .text-button {
+    grid-column: 1 / -1;
+  }
+
+  /* Keep results and both next steps in sight even on a short landscape
+     phone. Statistics share the heading's vertical space. */
+  html:not([data-player="true"]) #dialog[data-kind="result"] .dialog {
+    width: 680px;
+    padding: 20px 28px;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="result"] #dialog-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    gap: 8px 18px;
+    align-items: start;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="result"] #dialog-content > .eyebrow {
+    grid-column: 1 / -1;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="result"] .dialog h2 {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 28px;
+    line-height: 1.1;
+    margin-top: 0;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="result"] .dialog-intro {
+    grid-column: 1;
+    grid-row: 3;
+    margin-top: 0;
+    line-height: 1.4;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="result"] .result-stats {
+    grid-column: 2;
+    grid-row: 2 / 4;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    border-block: 0;
+    border-left: 1px solid #ffffff18;
+    padding: 0 0 0 18px;
+    margin: 0;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="result"] .result-stats b {
+    font-size: 24px;
+    line-height: 1.1;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="result"] .result-stats small {
+    display: inline;
+    margin-left: 3px;
+    font-size: 10px;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="result"] .result-stats p {
+    font-size: 9px;
+    line-height: 1.2;
+    margin-top: 3px;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="result"] .record {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="result"] .dialog-buttons {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  html:not([data-player="true"]) #dialog[data-kind="result"] .dialog-buttons button {
+    gap: 12px;
+  }
+}

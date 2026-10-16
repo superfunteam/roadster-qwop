@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="148 470 710 100" width="710" height="100" color="#ecedef" role="img" aria-labelledby="title">
+  <!-- Traced from the supplied logo.webp; cleaned vector contours, no embedded raster. -->
+  <title id="title">Roadster silhouette</title>
+  <g fill="currentColor">
+    <path d="M303 519C363 496 421 479 468 475C536 470 668 483 782 502C665 488 568 480 505 480C449 475 382 494 303 519Z"/>
+    <path d="M151 567C245 530 282 520 409 528C296 527 248 534 151 567Z"/>
+    <path d="M365 550C488 525 588 506 703 507C759 507 812 508 856 510C707 509 552 521 365 550Z"/>
+  </g>
+</svg>
