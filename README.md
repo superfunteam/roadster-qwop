@@ -51,7 +51,7 @@ Impacts crumple the body near the contact point, crack the glass, and tear loose
 
 ## Implementation
 
-- Three.js WebGL 2 renderer, physically based car materials, environment reflections, shadows, multisample antialiasing, bloom, and high-quality ambient occlusion.
+- Three.js WebGL 2 renderer with physically based car materials, environment reflections and shadows. Mobile renders directly with native antialiasing; desktop High adds bloom, ambient occlusion and FXAA using capability-checked, single-sample HDR targets.
 - Reference-built angular car mesh with cut-out wheel arches, glass canopy, detailed wheels/brakes, light bars, wing, diffuser, four lower nozzles and four rear nozzles.
 - cannon-es rigid body dynamics at a fixed 120 Hz: 1,540 kg compound chassis, four spring/damper suspension contacts, tire grip, independent offset jet forces, impact damage, and loose props. Lift jets supply 9 kN per corner and rear thrust supplies 25 kN. Game-tuned pitch inertia, passive rotational drag, and firmer suspension damping give the chassis time to lift without a violent tail strike while retaining player-controlled flips.
 - Pooled vapor/spark particles and eight instanced jet plumes. Twenty-five generated ElevenLabs audio assets ship locally: twelve effects, seven stressed/yelling pilot reactions, three frantic mission-control lines, and three original instrumental tracks.
@@ -60,6 +60,20 @@ Impacts crumple the body near the contact point, crack the glass, and tear loose
 - Static scenery batching and three graphics settings. No CDN, server API, account or external runtime dependency is required.
 
 The vehicle is a hand-built interpretation of the provided images, not a manufacturer CAD asset. Physics values are tuned for the game rather than presented as vehicle specifications.
+
+## Graphics and device compatibility
+
+WebGL 2 requires both browser and GPU support; it is not available on every phone, and support alone does not guarantee sufficient graphics memory or driver stability. Startup retries once with a fresh canvas and conservative attributes. If graphics remain unavailable, an actionable screen offers a safe reload and a diagnostic report without misidentifying every creation failure as missing WebGL 2 support. We do not claim device-specific stability without testing that device.
+
+Mobile and embedded players retain the complete car geometry, physically based materials, reflections and destruction, while bypassing the HDR compositor, bloom and screen-space ambient occlusion. Render budgets are 0.8 megapixels on High, 0.6 on Balanced and 0.45 on Performance; screen density cannot exceed those budgets. High and Balanced use 1024-pixel shadows, while Performance disables shadows. The DOM interface stays sharp at native resolution. Mobile rendering is limited to 60 fps during play and 30 fps in menus or while paused; hidden pages stop rendering.
+
+Sustained slow gameplay lowers render resolution after two slow measurement windows, with a cooldown between changes. Startup stalls and background pauses are excluded. Desktop High retains its richer effects with a 2.3-megapixel budget, reduced-resolution ambient occlusion and FXAA instead of multisampled HDR buffers. Unused render targets and passes are disposed when switching quality; repeated resize events do not repeatedly allocate buffers.
+
+A lost WebGL context clears held controls and pauses physics and audio. Restoration regenerates the GPU reflection map and resumes rendering in persistent **Compatibility mode**, with a 0.45-megapixel ceiling and 512-pixel shadows. Play resumes only after the player presses Resume. Repeated or unrecoverable interruptions offer **Reload safely** instead of an automatic reload loop. A safe-mode reload also disables native antialiasing. A browser process killed by the OS cannot deliver a recoverable context-loss event. A best-effort tab-session marker enables Compatibility mode after an interrupted visible session; clean page exits and backgrounding clear the marker. Detection depends on the browser preserving session storage, so it cannot identify every tab crash.
+
+Settings include Compatibility mode and **Copy graphics report**, which copies the browser/GPU identity, active rendering budget and resource counts locally for troubleshooting. No diagnostics are transmitted automatically. The requested quality remains saved separately from the compatibility override.
+
+The graphics suite uses the real `WEBGL_lose_context` extension, high-DPR mobile emulation, repeated level/explosion cycles, resize bursts, quality changes and explicit recovery. Emulation uses the test computer's GPU; it does not reproduce a physical Pixel's GPU or driver.
 
 ## Validation
 
@@ -71,6 +85,7 @@ npm run test:player
 npm run test:responsive
 npm run test:flight
 npm run test:touch
+npm run test:graphics
 npm run build
 npm run preview
 ```

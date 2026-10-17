@@ -204,7 +204,7 @@ export class UI {
     document.addEventListener("keydown", (e) => {
       if (!this.dialog.hidden && e.key === "Tab") {
         const els = [
-          ...this.dialog.querySelectorAll("button,a,input,select"),
+          ...this.dialog.querySelectorAll("button,a,input,select,textarea"),
         ].filter((el) => !el.disabled && !el.hidden);
         if (!els.length) return;
         const first = els[0],
@@ -370,13 +370,14 @@ export class UI {
   modal(html, kind = "") {
     this.previousFocus = document.activeElement;
     this.dialog.dataset.kind = kind;
+    this.dialog.querySelector(".close-dialog").hidden = kind === "graphics";
     document.querySelector("#dialog-content").innerHTML = html;
     this.dialog.hidden = false;
     this.dialog.querySelector(".dialog").scrollTop = 0;
     document.querySelector("#hangar").inert = true;
     document.querySelector("#hud").inert = true;
     document.querySelector(".topbar").inert = true;
-    requestAnimationFrame(() => this.dialog.querySelector("button")?.focus());
+    requestAnimationFrame(() => this.dialog.querySelector("button:not([hidden]):not(:disabled)")?.focus());
   }
   close() {
     this.dialog.hidden = true;
@@ -398,8 +399,25 @@ export class UI {
   }
   showSettings(settings) {
     this.modal(
-      `<p class="eyebrow">VEHICLE PREFERENCES</p><h2 id="dialog-title">Make yourself<br>comfortable.</h2><div class="settings-list"><label>Sound <input id="setting-sound" type="checkbox" ${settings.muted ? "" : "checked"} /><span>All game audio</span></label><label>Music <input id="setting-music" type="checkbox" ${settings.music !== false ? "checked" : ""} /><span>The soundtrack to poor decisions</span></label><label>Pilot reactions <input id="setting-voices" type="checkbox" ${settings.voices !== false ? "checked" : ""} /><span>Panicked pilot & frantic mission control</span></label><label>Haptics <input id="setting-haptics" type="checkbox" ${settings.haptics ? "checked" : ""} /><span>Vibration on supported devices</span></label><label>Camera shake <input id="setting-shake" type="checkbox" ${settings.shake ? "checked" : ""} /><span>Feel the thrust and hard landings</span></label><label>Graphics <select id="setting-quality"><option value="high" ${settings.quality === "high" ? "selected" : ""}>High</option><option value="balanced" ${settings.quality === "balanced" ? "selected" : ""}>Balanced</option><option value="low" ${settings.quality === "low" ? "selected" : ""}>Performance</option></select><span>Reflections, shadows & resolution</span></label></div><button class="primary-button wide" data-action="save-settings">Ready for liftoff ${svg("arrow")}</button>`,
+      `<p class="eyebrow">VEHICLE PREFERENCES</p><h2 id="dialog-title">Make yourself<br>comfortable.</h2><div class="settings-list"><label>Sound <input id="setting-sound" type="checkbox" ${settings.muted ? "" : "checked"} /><span>All game audio</span></label><label>Music <input id="setting-music" type="checkbox" ${settings.music !== false ? "checked" : ""} /><span>The soundtrack to poor decisions</span></label><label>Pilot reactions <input id="setting-voices" type="checkbox" ${settings.voices !== false ? "checked" : ""} /><span>Panicked pilot & frantic mission control</span></label><label>Haptics <input id="setting-haptics" type="checkbox" ${settings.haptics ? "checked" : ""} /><span>Vibration on supported devices</span></label><label>Camera shake <input id="setting-shake" type="checkbox" ${settings.shake ? "checked" : ""} /><span>Feel the thrust and hard landings</span></label><label>Graphics <select id="setting-quality"><option value="high" ${settings.quality === "high" ? "selected" : ""}>High</option><option value="balanced" ${settings.quality === "balanced" ? "selected" : ""}>Balanced</option><option value="low" ${settings.quality === "low" ? "selected" : ""}>Performance</option></select><span>Adapts resolution to keep play smooth</span></label><label>Compatibility mode <input id="setting-safe" type="checkbox" ${settings.safeGraphics ? "checked" : ""} /><span>Lighter graphics for devices having trouble</span></label></div><button class="text-button wide" data-action="graphics-report">Copy graphics report</button><button class="primary-button wide" data-action="save-settings">Ready for liftoff ${svg("arrow")}</button>`,
     );
+  }
+  graphicsRecovery(state, inGame = false) {
+    const restored = state === "restored", failed = state === "failed";
+    this.modal(
+      `<p class="eyebrow">FLIGHT SYSTEMS</p><h2 id="dialog-title">${restored ? "Graphics restored." : failed ? "Graphics need a restart." : "Restoring graphics…"}</h2><p class="dialog-intro">${restored ? "Your test is paused. Compatibility mode is on to reduce the graphics load." : failed ? "The graphics system could not recover reliably. Restart with lighter settings to try again." : "Your test is paused. Restoring graphics with a lighter rendering budget."}</p><div class="dialog-buttons">${restored ? `<button class="primary-button wide" data-action="${inGame ? "close" : "home"}">${inGame ? "Resume test" : "Return to hangar"}</button>` : `<button class="${failed ? "primary-button" : "secondary-button"} wide" data-action="reload-graphics">Reload safely</button>`}</div>`,
+      "graphics",
+    );
+  }
+  graphicsReport(report) {
+    this.modal(
+      `<p class="eyebrow">FLIGHT SYSTEMS</p><h2 id="dialog-title">Graphics report</h2><p class="dialog-intro">Copy this report to help diagnose the problem. Nothing is sent automatically.</p><textarea class="graphics-report" aria-label="Graphics report" readonly></textarea><button class="primary-button wide" data-action="settings">Back to settings</button>`,
+      "graphics-report",
+    );
+    const field = this.dialog.querySelector("textarea");
+    field.value = report;
+    field.focus();
+    field.select();
   }
   result(s, level, best) {
     const win = s.outcome === "success",

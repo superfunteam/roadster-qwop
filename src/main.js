@@ -1,17 +1,9 @@
-import "./style.css";
-import "./viewport.css";
-import "./responsive-menus.css";
-import "./responsive-controls.css";
-import "./embed.css";
-import "./touch-controls.css";
 import { isPlayer, getGameViewport, refreshGameViewport } from "./embed.js";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
-import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { GraphicsPipeline } from "./graphics.js";
+import { createGameRenderer } from "./graphics-startup.js";
+import { startGraphicsSession } from "./graphics-session.js";
 import { createCar } from "./car.js";
 import { PhysicsGame } from "./physics.js";
 import { buildEnvironment } from "./environments.js";
@@ -24,6 +16,8 @@ import { UI, LEVELS } from "./ui.js";
 import { setupPWA } from "./pwa.js";
 
 const viewport = getGameViewport();
+const mobileGraphics = isPlayer || navigator.userAgentData?.mobile === true ||
+  matchMedia("(pointer: coarse)").matches;
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const defaults = {
   muted: false,
@@ -31,6 +25,7 @@ const defaults = {
   voices: true,
   haptics: true,
   shake: !reducedMotion,
+  safeGraphics: false,
   quality:
     isPlayer || viewport.width < 760 || matchMedia("(pointer: coarse)").matches
       ? "balanced"
@@ -50,20 +45,19 @@ function saveStorage(key, value) {
 }
 const settings = { ...defaults, ...readStorage("roadster-settings", {}) };
 const records = readStorage("roadster-records", {});
-let renderer;
-try {
-  renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    powerPreference: "high-performance",
-    alpha: false,
-  });
-} catch (error) {
-  document.querySelector("#loading").innerHTML =
-    '<div class="dialog"><p class="eyebrow">SYSTEM CHECK</p><h2>This flight needs WebGL 2.</h2><p class="dialog-intro">Try an up-to-date Chrome, Edge, Firefox or Safari browser with graphics acceleration enabled.</p></div>';
-  throw error;
-}
-renderer.setSize(viewport.width, viewport.height);
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+startGraphicsSession(() => {
+  settings.safeGraphics = true;
+  saveStorage("roadster-settings", settings);
+});
+const renderer = createGameRenderer(settings, {
+  mobile: mobileGraphics,
+  onSafeMode() {
+    settings.safeGraphics = true;
+    saveStorage("roadster-settings", settings);
+  },
+});
+// Start tiny; the device budget is applied before the first scene render.
+renderer.setDrawingBufferSize(1, 1, 1);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
@@ -88,36 +82,26 @@ const camera = new THREE.PerspectiveCamera(
   0.08,
   2200,
 );
-const pmrem = new THREE.PMREMGenerator(renderer);
-const reflectionRoom = new RoomEnvironment();
-const envMap = pmrem.fromScene(reflectionRoom, 0.025).texture;
-scene.environment = envMap;
+let environmentTarget;
+function rebuildReflections() {
+  scene.environment = null;
+  environmentTarget?.dispose();
+  environmentTarget = null;
+  // PMREM itself needs a half-float render target, even without composition.
+  // Keep direct scene lighting usable when that optional capability is absent.
+  if (!renderer.extensions.has("EXT_color_buffer_float")) return;
+  const generator = new THREE.PMREMGenerator(renderer);
+  const room = new RoomEnvironment();
+  try {
+    environmentTarget = generator.fromScene(room, 0.025);
+    scene.environment = environmentTarget.texture;
+  } finally {
+    room.dispose();
+    generator.dispose();
+  }
+}
+rebuildReflections();
 scene.environmentIntensity = 0.6;
-reflectionRoom.dispose();
-pmrem.dispose();
-const renderTarget = new THREE.WebGLRenderTarget(
-  viewport.width,
-  viewport.height,
-  {
-    type: THREE.HalfFloatType,
-  },
-);
-renderTarget.samples = 4;
-const composer = new EffectComposer(renderer, renderTarget);
-composer.addPass(new RenderPass(scene, camera));
-const ao = new SSAOPass(scene, camera, viewport.width, viewport.height, 16);
-ao.kernelRadius = 0.45;
-ao.minDistance = 0.0001;
-ao.maxDistance = 0.025;
-composer.addPass(ao);
-const bloom = new UnrealBloomPass(
-  new THREE.Vector2(viewport.width, viewport.height),
-  0.22,
-  0.45,
-  1.3,
-);
-composer.addPass(bloom);
-composer.addPass(new OutputPass());
 const car = createCar();
 scene.add(car.group);
 const audio = new GameAudio();
@@ -184,21 +168,10 @@ const physics = new PhysicsGame({
 });
 const effects = new BoosterEffects(scene, car);
 const wreck = new WreckEffects(scene, physics, car);
-const renderAO = ao.render.bind(ao);
-ao.render = (...args) => {
-  const excluded = [effects.flames, ...(wreck.aoExcluded || [])];
-  const visible = excluded.map((object) => object.visible);
-  excluded.forEach((object) => {
-    object.visible = false;
-  });
-  try {
-    renderAO(...args);
-  } finally {
-    excluded.forEach((object, index) => {
-      object.visible = visible[index];
-    });
-  }
-};
+const graphics = new GraphicsPipeline(renderer, scene, camera, {
+  excludedEffects: () => [effects.flames, ...(wreck.aoExcluded || [])],
+});
+let graphicsLost = false, graphicsLosses = 0, graphicsRecoveryTimer;
 const ui = new UI(action, settings);
 const input = new Input({ onAction: action });
 input.bind();
@@ -260,33 +233,48 @@ function vibrate(pattern) {
     navigator.vibrate(pattern);
   } catch {}
 }
-function configureGraphics() {
-  const high = settings.quality === "high",
-    low = settings.quality === "low";
-  renderer.setPixelRatio(
-    Math.min(devicePixelRatio, low ? 1 : high ? 1.75 : 1.25),
-  );
-  renderer.shadowMap.enabled = !low;
-  bloom.enabled = !low;
-  ao.enabled = high;
-  composer.setPixelRatio(renderer.getPixelRatio());
-  composer.setSize(viewport.width, viewport.height);
-  ao.setSize(
-    Math.round(viewport.width * 0.8),
-    Math.round(viewport.height * 0.8),
-  );
+function graphicsOptions() {
+  return {
+    quality: settings.quality,
+    width: viewport.width,
+    height: viewport.height,
+    devicePixelRatio: window.devicePixelRatio,
+    mobile: mobileGraphics,
+    safeMode: settings.safeGraphics,
+  };
+}
+function resizeEffects() {
   effects.resize?.(viewport.height, renderer.getPixelRatio());
   wreck.resize?.(viewport.height, renderer.getPixelRatio());
-  scene.traverse((obj) => {
-    if (obj.isDirectionalLight && obj.shadow) {
-      const size = high ? 2048 : 1024;
-      if (obj.shadow.mapSize.x !== size) {
-        obj.shadow.mapSize.set(size, size);
-        obj.shadow.map?.dispose();
-        obj.shadow.map = null;
-      }
-    }
-  });
+}
+function configureGraphics() {
+  if (graphicsLost) return;
+  graphics.configure(graphicsOptions());
+  resizeEffects();
+}
+async function copyGraphicsReport() {
+  const gl = renderer.getContext();
+  const lost = gl.isContextLost();
+  const debug = !lost && gl.getExtension("WEBGL_debug_renderer_info");
+  const report = JSON.stringify({
+    date: new Date().toISOString(),
+    browser: navigator.userAgent,
+    gpu: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : "unavailable",
+    webgl: lost ? "context lost" : gl.getParameter(gl.VERSION),
+    contextLosses: graphicsLosses,
+    contextLost: lost,
+    graphics: graphics.diagnostics,
+    antialias: gl.getContextAttributes()?.antialias,
+    drawingBuffer: [gl.drawingBufferWidth, gl.drawingBufferHeight],
+    resources: { ...renderer.info.memory },
+    level: mode === "game" ? LEVELS[selected].id : "hangar",
+  }, null, 2);
+  try {
+    await navigator.clipboard.writeText(report);
+    ui.toast("Graphics report copied. Share it with the developer.");
+  } catch {
+    ui.graphicsReport(report);
+  }
 }
 function makeStudio() {
   const group = new THREE.Group();
@@ -478,6 +466,17 @@ function togglePause() {
   }
 }
 function action(name, value) {
+  if (name === "reload-graphics") {
+    settings.safeGraphics = true;
+    saveStorage("roadster-settings", settings);
+    location.reload();
+    return;
+  }
+  if (name === "graphics-report") {
+    void copyGraphicsReport();
+    return;
+  }
+  if (graphicsLost) return;
   if (name === "select") {
     selected = value;
     return;
@@ -542,6 +541,7 @@ function action(name, value) {
     settings.haptics = document.querySelector("#setting-haptics").checked;
     settings.shake = document.querySelector("#setting-shake").checked;
     settings.quality = document.querySelector("#setting-quality").value;
+    settings.safeGraphics = document.querySelector("#setting-safe").checked;
     saveStorage("roadster-settings", settings);
     audio.setMuted(settings.muted);
     audio.setPreferences(settings);
@@ -736,25 +736,20 @@ function finish(s) {
   audio.finish(s.outcome);
   ui.result(s, LEVELS[selected], best);
 }
+let resizeTimer;
 function resize() {
   const previousWidth = viewport.width;
   refreshGameViewport();
-  // Rotation moves the touch controls under the player's fingers. Require a
-  // fresh touch instead of carrying a held rocket into the new layout.
   if (previousWidth !== viewport.width) {
     input.clear();
     pointer.down = false;
   }
   camera.aspect = viewport.width / viewport.height;
-  renderer.setSize(viewport.width, viewport.height);
-  composer.setSize(viewport.width, viewport.height);
-  ao.setSize(
-    Math.round(viewport.width * 0.8),
-    Math.round(viewport.height * 0.8),
-  );
-  effects.resize?.(viewport.height, renderer.getPixelRatio());
-  wreck.resize?.(viewport.height, renderer.getPixelRatio());
   camera.updateProjectionMatrix();
+  // Browser chrome and rotation can emit a burst of viewport events. Resize
+  // the GPU buffers once after they settle; CSS still responds immediately.
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(configureGraphics, 120);
 }
 window.addEventListener("resize", resize);
 window.visualViewport?.addEventListener("resize", resize);
@@ -771,11 +766,55 @@ window.addEventListener("install-help", (e) => {
 window.addEventListener("pwa-installed", () =>
   ui.toast("Roadster installed. Ready for takeoff."),
 );
-renderer.domElement.addEventListener("webglcontextlost", (e) => {
-  e.preventDefault();
+renderer.domElement.addEventListener("webglcontextlost", (event) => {
+  event.preventDefault();
+  graphicsLost = true;
+  graphicsLosses++;
   paused = true;
   input.enabled = false;
-  ui.toast("Graphics interrupted. Reload to restart the flight systems.");
+  input.clear();
+  pointer.down = false;
+  audio.setPaused(true);
+  settings.safeGraphics = true;
+  saveStorage("roadster-settings", settings);
+  graphics.dispose();
+  // Release GPU-generated targets before the context is replaced. WebKit
+  // rejects deleting native objects from the previous context after restore.
+  scene.environment = null;
+  environmentTarget?.dispose();
+  environmentTarget = null;
+  scene.traverse((object) => {
+    if (!object.shadow) return;
+    object.shadow.map?.dispose();
+    object.shadow.map = null;
+    object.shadow.mapPass?.dispose();
+    object.shadow.mapPass = null;
+  });
+  ui.graphicsRecovery("restoring");
+  clearTimeout(graphicsRecoveryTimer);
+  graphicsRecoveryTimer = setTimeout(() => {
+    if (graphicsLost) ui.graphicsRecovery("failed");
+  }, 10000);
+});
+renderer.domElement.addEventListener("webglcontextrestored", () => {
+  clearTimeout(graphicsRecoveryTimer);
+  if (graphicsLosses >= 3) {
+    ui.graphicsRecovery("failed");
+    return;
+  }
+  try {
+    // Three recreates its GL state before this listener. GPU-generated
+    // reflections must be regenerated too; the old texture has no pixels.
+    graphics.restore(graphicsOptions());
+    rebuildReflections();
+    resizeEffects();
+    graphicsLost = false;
+    lastFrame = performance.now();
+    ui.graphicsRecovery("restored", mode === "game" && !resultShown);
+  } catch (error) {
+    console.error("Graphics restoration failed", error);
+    ui.graphicsRecovery("failed");
+  }
 });
 setupPWA();
 home();
@@ -788,13 +827,27 @@ setTimeout(() => {
   setTimeout(() => document.querySelector("#loading")?.remove(), 700);
 }, 450);
 
+let nextRenderAt = 0;
 function animate(now) {
   requestAnimationFrame(animate);
-  const dt = Math.min((now - lastFrame) / 1000, 0.05);
+  audio.setPaused(paused || document.hidden || windowBlurred || graphicsLost);
+  if (document.hidden || graphicsLost) {
+    lastFrame = now;
+    nextRenderAt = 0;
+    return;
+  }
+  // A 120 Hz phone should not render twice as many pixels for the same game.
+  // Menus and paused scenes also need less GPU time and generate less heat.
+  if (mobileGraphics) {
+    if (now + 0.5 < nextRenderAt) return;
+    const frameLimit = mode === "game" && !paused && !windowBlurred ? 60 : 30;
+    nextRenderAt = Math.max(nextRenderAt + 1000 / frameLimit, now);
+  }
+  const frameMs = now - lastFrame;
+  const dt = Math.min(frameMs / 1000, 0.05);
   lastFrame = now;
   totalTime += dt;
-  audio.setPaused(paused || document.hidden || windowBlurred);
-  if (document.hidden) return;
+  if (mode === "game" && !paused && !windowBlurred && countdown <= 0 && !resultShown && graphics.observeFrame(frameMs)) resizeEffects();
   if (!paused) {
     shake *= Math.exp(-dt * 8);
     impactFlash *= Math.exp(-dt * 5);
@@ -818,7 +871,7 @@ function animate(now) {
           );
         }
       } else physics.step(dt, input.state);
-    } else if (resultShown) {
+    } else if (resultShown && !paused) {
       physics.step(dt, {});
     }
     let state = physics.state;
@@ -907,7 +960,7 @@ function animate(now) {
     audio.update({}, false);
   }
   updateCamera(dt);
-  composer.render();
+  graphics.render();
   if (import.meta.env.DEV) {
     frameCount++;
     fpsSum += dt;
@@ -925,6 +978,9 @@ if (import.meta.env.DEV)
     scene,
     camera,
     renderer,
+    graphics,
+    get graphicsLost() { return graphicsLost; },
+    get graphicsLosses() { return graphicsLosses; },
     ui,
     input,
     effects,
