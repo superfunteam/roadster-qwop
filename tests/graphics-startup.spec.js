@@ -13,13 +13,15 @@ test.afterEach(async ({ page }) => {
   expect(failures.get(page), "Expected context failures must not become uncaught startup errors").toEqual([]);
 });
 
-async function simulateContextFailures(page, { all = true, clipboardFailure = false, delayedStatus = false } = {}) {
-  await page.addInitScript(({ all, clipboardFailure, delayedStatus }) => {
+async function simulateContextFailures(page, { all = true, clipboardFailure = false, delayedStatus = false, statusMessage = "Simulated GPU temporarily unavailable after reset" } = {}) {
+  await page.addInitScript(({ all, clipboardFailure, delayedStatus, statusMessage }) => {
     if (!localStorage.getItem("roadster-settings")) localStorage.setItem("roadster-settings", JSON.stringify({ quality: "high", safeGraphics: false, muted: true }));
     localStorage.setItem("roadster-manual-seen", "true");
     const original = HTMLCanvasElement.prototype.getContext;
     const canvases = new WeakMap();
     let count = 0;
+    const pendingStatus = [];
+    window.emitStartupStatuses = () => pendingStatus.splice(0).forEach((notify) => notify());
     window.startupContextAttempts = [];
     HTMLCanvasElement.prototype.getContext = function (type, attributes) {
       if (type !== "webgl2") return original.call(this, type, attributes);
@@ -28,16 +30,64 @@ async function simulateContextFailures(page, { all = true, clipboardFailure = fa
       const blocked = all || canvas === 1;
       window.startupContextAttempts.push({ canvas, attributes: attributes || null, blocked });
       if (blocked) {
-        const notify = () => this.dispatchEvent(new WebGLContextEvent("webglcontextcreationerror", { statusMessage: "Simulated GPU temporarily unavailable after reset" }));
-        if (delayedStatus) queueMicrotask(notify);
+        const notify = () => this.dispatchEvent(new WebGLContextEvent("webglcontextcreationerror", { statusMessage }));
+        if (delayedStatus === "manual") pendingStatus.push(notify);
+        else if (delayedStatus) queueMicrotask(notify);
         else notify();
         return null;
       }
       return original.call(this, type, attributes);
     };
     if (clipboardFailure) Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => { throw new DOMException("Clipboard unavailable", "NotAllowedError"); } } });
-  }, { all, clipboardFailure, delayedStatus });
+  }, { all, clipboardFailure, delayedStatus, statusMessage });
 }
+
+const CHROME_BLOCK = "Web page caused context loss and was blocked";
+
+test("an explicit Chromium block skips the second canvas and explains browser-controlled reload", async ({ page }) => {
+  await simulateContextFailures(page, { statusMessage: CHROME_BLOCK, clipboardFailure: true });
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Chrome blocked the graphics." })).toBeVisible();
+  await expect(page.getByText(/Compatibility mode is saved/)).toBeVisible();
+  await expect(page.getByText(/Open Chrome’s menu and tap Reload, or tap the address bar and press Go/)).toBeVisible();
+  await expect(page.getByText(/button inside this page cannot clear this block/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reload safely", exact: true })).toHaveCount(0);
+  expect(await page.evaluate(() => [...new Set(window.startupContextAttempts.map((attempt) => attempt.canvas))])).toEqual([1]);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("roadster-settings")).safeGraphics)).toBe(true);
+  const reportButton = page.getByRole("button", { name: "Copy graphics report", exact: true });
+  await expect(reportButton).toHaveClass("primary-button");
+  await reportButton.click();
+  const report = JSON.parse(await page.getByRole("textbox", { name: "Graphics report", exact: true }).inputValue());
+  expect(report.browserBlocked).toBe(true);
+  expect(report.attempts).toHaveLength(1);
+  expect(report.attempts[0].statusMessages).toContain(CHROME_BLOCK);
+});
+
+test("a queued Chromium block replaces generic guidance without wiping an open report", async ({ page }) => {
+  await simulateContextFailures(page, { statusMessage: CHROME_BLOCK, clipboardFailure: true, delayedStatus: "manual" });
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Graphics could not start." })).toBeVisible();
+  await page.getByRole("button", { name: "Copy graphics report", exact: true }).click();
+  const field = page.getByRole("textbox", { name: "Graphics report", exact: true });
+  await expect(field).toBeVisible();
+  const oldStatus = await page.getByRole("status").textContent();
+  await page.evaluate(() => {
+    window.existingReportField = document.querySelector(".graphics-startup-report textarea");
+    window.emitStartupStatuses();
+  });
+  await expect(page.getByRole("heading", { name: "Chrome blocked the graphics." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reload safely", exact: true })).toHaveCount(0);
+  await expect(field).toBeFocused();
+  expect(await page.evaluate(() => window.existingReportField === document.querySelector(".graphics-startup-report textarea"))).toBe(true);
+  await expect(page.getByRole("status")).toHaveText(oldStatus);
+  const report = JSON.parse(await field.inputValue());
+  expect(report.browserBlocked).toBe(true);
+  // Both attempts had already failed before the browser delivered its reason.
+  expect(report.attempts).toHaveLength(2);
+  expect(report.attempts.every((attempt) => attempt.statusMessages.includes(CHROME_BLOCK))).toBe(true);
+  await page.waitForTimeout(100);
+  expect(await page.evaluate(() => [...new Set(window.startupContextAttempts.map((attempt) => attempt.canvas))])).toEqual([1, 2]);
+});
 
 for (const url of ["/", "/player/"]) {
   test(`unavailable WebGL shows useful recovery without an uncaught error at ${url}`, async ({ page }) => {
