@@ -4,7 +4,23 @@ The current master is `output/roadster-trailer/roadster-hype-trailer-v3-80s.mp4`
 
 Gameplay uses the actual Three.js renderer, normal keyboard inputs and shipped physics. Capture controls frame timing and camera placement; it never forces vehicle positions, velocities, damage or explosions. The live control HUD records the actual Q/W/O/P thrust meters, drive keys, rear boost, speed, hull, timer and factory ring count. The introductory and closing hover shots are separate **branded showroom animations**, rendered with the game's car model and exhaust effects; they are not simulated player flight.
 
-Rendered video, intermediate captures and mix masters are ignored by Git. Eight new stressed ElevenLabs voice performances are tracked under `scripts/trailer/audio-v3/`, outside `public/`, so they do not increase the deployed game payload or offline cache. The soundtrack also uses the existing ElevenLabs music, effects and voices, plus the game's two-note ring chime.
+Full-quality video masters, intermediate captures and mix masters are ignored by Git. A smaller 1080p web export, its poster and subtitles, and the Octocat share image are published under `public/media/`. This entire directory is excluded from the game's offline cache and downloads only when requested. Eight new stressed ElevenLabs voice performances are tracked under `scripts/trailer/audio-v3/`, outside `public/`. The soundtrack also uses the existing ElevenLabs music, effects and voices, plus the game's two-note ring chime.
+
+Public files deploy through the existing GitHub-to-Netlify build:
+
+- Video: `https://roadster.superfun.games/media/roadster-trailer-v3.mp4`
+- Share image: `https://roadster.superfun.games/media/roadster-open-source-octocat.png`
+- Poster: `https://roadster.superfun.games/media/roadster-trailer-v3-poster.jpg`
+- Subtitles: `https://roadster.superfun.games/media/roadster-trailer-v3.vtt` (also `.srt`)
+
+To reproduce the web export from the master:
+
+```sh
+ffmpeg -i output/roadster-trailer/roadster-hype-trailer-v3-80s.mp4 \
+  -map 0:v:0 -map 0:a:0 -c:v libx264 -preset slow -crf 23.5 \
+  -pix_fmt yuv420p -c:a aac -b:a 192k -movflags +faststart \
+  public/media/roadster-trailer-v3.mp4
+```
 
 ## Current edit
 

@@ -32,6 +32,9 @@ self.addEventListener("fetch", (event) => {
   if (!PRECACHE.length || request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  // Published trailers/share art stay network-only. In particular, leave video
+  // navigation and byte-range requests alone instead of serving game HTML.
+  if (url.pathname === "/media" || url.pathname.startsWith("/media/")) return;
 
   if (request.mode === "navigate") {
     event.respondWith(

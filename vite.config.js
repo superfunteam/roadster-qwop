@@ -19,6 +19,9 @@ function offlineGame() {
       async function filesUnder(directory) {
         const files = [];
         for (const entry of await readdir(directory, { withFileTypes: true })) {
+          // Trailers and share artwork are published on demand, not installed
+          // with the game. Skip traversal so large videos aren't even hashed.
+          if (directory === output && entry.name === "media") continue;
           const file = path.join(directory, entry.name);
           if (entry.isDirectory()) files.push(...(await filesUnder(file)));
           else files.push(file);

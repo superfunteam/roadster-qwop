@@ -7,6 +7,57 @@ test.skip(
   "Production offline test needs a built preview in PWA_TEST_URL.",
 );
 
+test("published media stays online-only and never becomes an offline game download", async ({ page, context }) => {
+  const mediaRequests = [];
+  context.on("request", (request) => {
+    if (new URL(request.url()).pathname.startsWith("/media/"))
+      mediaRequests.push(request.url());
+  });
+  await page.goto("/graphics-check.html");
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.register("/sw.js");
+    await navigator.serviceWorker.ready;
+  });
+  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+  expect(mediaRequests).toEqual([]);
+  const online = await page.evaluate(async () => {
+    const image = await fetch("/media/roadster-open-source-octocat.png");
+    const video = await fetch("/media/roadster-trailer-v3.mp4", {
+      headers: { Range: "bytes=0-127" },
+    });
+    return {
+      imageStatus: image.status,
+      imageType: image.headers.get("content-type"),
+      videoStatus: video.status,
+      videoType: video.headers.get("content-type"),
+      videoRange: video.headers.get("content-range"),
+      videoBytes: (await video.arrayBuffer()).byteLength,
+    };
+  });
+  expect(online.imageStatus).toBe(200);
+  expect(online.imageType).toContain("image/png");
+  expect(online.videoStatus).toBe(206);
+  expect(online.videoType).toContain("video/mp4");
+  expect(online.videoRange).toMatch(/^bytes 0-127\/\d+$/);
+  expect(online.videoBytes).toBe(128);
+  const cachedPaths = await page.evaluate(async () => {
+    const names = (await caches.keys()).filter((name) => name.startsWith("roadster-flight-test-"));
+    return (await Promise.all(names.map(async (name) => {
+      const cache = await caches.open(name);
+      return (await cache.keys()).map((request) => new URL(request.url).pathname);
+    }))).flat();
+  });
+  expect(cachedPaths).toContain("/index.html");
+  expect(cachedPaths.filter((path) => path.startsWith("/media/"))).toEqual([]);
+
+  // A direct media navigation while offline must fail as a media request,
+  // never return the game shell or launch a WebGL workload.
+  await context.setOffline(true);
+  await page.route("**/media/**", (route) => route.abort("internetdisconnected"));
+  await expect(page.goto("/media/roadster-trailer-v3.mp4")).rejects.toThrow();
+  expect(await page.locator("#game-canvas").count()).toBe(0);
+});
+
 test("the offline diagnostic stays separate from the game shell", async ({ page, context }) => {
   await page.goto("/graphics-check.html");
   // Install the production worker explicitly for this test. The diagnostic

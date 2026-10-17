@@ -12,3 +12,5 @@ test-results/
 reference/qa/
 # Rendered trailer masters are deliverable files, not deployed game assets.
 output/roadster-trailer/
+# Local image exports; published copies live under public/media/.
+output/social/
