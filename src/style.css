@@ -110,8 +110,11 @@ kbd {
   pointer-events: none;
 }
 .loading-wordmark {
-  font-size: 26px;
-  letter-spacing: 12px;
+  display: block;
+  width: 180px;
+  max-width: calc(100vw - 48px);
+  height: auto;
+  flex: none;
 }
 .loading-track {
   width: 150px;
