@@ -40,7 +40,12 @@ flight.children = ["q", "qw", "w", "qo", "qwop", "wp", "o", "op", "p"]
   .map((jets) => new Element({ jets }));
 const boost = new Element({ control: "boost" });
 const duplicateBoost = new Element({ control: "boost" });
-const elements = [drive, flight, boost, duplicateBoost, ...flight.children];
+const throttle = new Element({ control: "throttle" });
+const brake = new Element({ control: "brake" });
+const left = new Element({ control: "left" });
+const right = new Element({ control: "right" });
+const controls = [boost, duplicateBoost, throttle, brake, left, right];
+const elements = [drive, flight, ...controls, ...flight.children];
 
 globalThis.window = new Element();
 window.matchMedia = () => ({ matches: true });
@@ -49,7 +54,7 @@ document.documentElement = new Element();
 document.hidden = false;
 document.querySelector = () => null;
 document.querySelectorAll = (selector) => {
-  if (selector === "[data-control]") return [boost, duplicateBoost];
+  if (selector === "[data-control]") return controls;
   if (selector === "[data-touch-pad]") return [drive, flight];
   if (selector === ".held") return elements.filter((element) => element.classList.contains("held"));
   return [];
@@ -214,4 +219,57 @@ test("lost capture and blur release touch input even when no pointerup arrives",
   assert.equal(input.state.throttle, 0);
   assert.equal(input.state.steer, 0);
   assert.equal(input.pointers.size, 0);
+});
+
+test("arrow keys and rear boost light the actual controls only while input is enabled", () => {
+  input.clear();
+  const bindings = [["ArrowUp", throttle], ["ArrowDown", brake], ["ArrowLeft", left], ["ArrowRight", right], ["Space", boost]];
+  for (const [code, element] of bindings) {
+    key("keydown", code);
+    assert.equal(element.classList.contains("held"), true, code);
+    key("keyup", code);
+    assert.equal(element.classList.contains("held"), false, `${code} release`);
+  }
+  input.enabled = false;
+  key("keydown", "ArrowUp");
+  key("keydown", "Space");
+  assert.equal(throttle.classList.contains("held"), false);
+  assert.equal(boost.classList.contains("held"), false);
+  assert.deepEqual(input.state, {});
+  input.enabled = true;
+  assert.equal(throttle.classList.contains("held"), true);
+  assert.equal(boost.classList.contains("held"), true);
+  assert.equal(duplicateBoost.classList.contains("held"), true);
+  input.enabled = false;
+  assert.equal(throttle.classList.contains("held"), false);
+  assert.equal(boost.classList.contains("held"), false);
+  input.clear();
+  input.enabled = true;
+  key("keydown", "ArrowUp", true);
+  key("keydown", "Space", true);
+  assert.equal(throttle.classList.contains("held"), false, "blocked OS repeats do not relight a reset control");
+  assert.equal(boost.classList.contains("held"), false);
+  key("keyup", "ArrowUp");
+  key("keyup", "Space");
+});
+
+test("keyboard and pointer releases preserve the other source's control highlight", () => {
+  key("keydown", "Space");
+  pointer("pointerdown", boost, 30, 0, 0);
+  pointer("pointerup", boost, 30, 0, 0);
+  assert.equal(boost.classList.contains("held"), true, "keyboard keeps boost held after pointer release");
+  assert.equal(input.state.boost, 1);
+  pointer("pointerdown", boost, 31, 0, 0);
+  key("keyup", "Space");
+  assert.equal(boost.classList.contains("held"), true, "pointer keeps boost held after keyboard release");
+  assert.equal(duplicateBoost.classList.contains("held"), false, "pointer highlights its actual button");
+  assert.equal(input.state.boost, 1);
+  pointer("pointerup", boost, 31, 0, 0);
+  assert.equal(boost.classList.contains("held"), false);
+  assert.equal(input.state.boost, 0);
+  key("keydown", "ArrowRight");
+  window.dispatchEvent(new Event("blur"));
+  assert.equal(right.classList.contains("held"), false);
+  assert.equal(input.state.steer, 0);
+  key("keyup", "ArrowRight");
 });

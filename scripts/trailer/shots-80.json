@@ -1,0 +1,273 @@
+[
+  {
+    "name": "v2-ramp-inversion",
+    "level": 2,
+    "duration": 12,
+    "keys": []
+  },
+  {
+    "name": "v2-ramp-barrel",
+    "level": 2,
+    "duration": 11,
+    "camera": {
+      "offset": [
+        12,
+        4,
+        -7
+      ],
+      "fov": 42
+    },
+    "keys": [
+      [
+        5,
+        11,
+        [
+          "KeyQ",
+          "KeyO",
+          "Space"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "v2-garage-housewreck",
+    "level": 0,
+    "duration": 11,
+    "keys": [
+      [
+        0,
+        0.5,
+        [
+          "ArrowRight",
+          "ArrowUp"
+        ]
+      ],
+      [
+        0.5,
+        11,
+        [
+          "ArrowRight",
+          "ArrowUp",
+          "Space",
+          "KeyQ",
+          "KeyW"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "v2-garage-backflip",
+    "level": 0,
+    "duration": 10,
+    "camera": {
+      "offset": [
+        3,
+        2.8,
+        -6.5
+      ],
+      "fov": 46
+    },
+    "keys": [
+      [
+        0,
+        10,
+        [
+          "KeyQ",
+          "KeyW",
+          "Space"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "v2-ramp-inversion-close",
+    "level": 2,
+    "duration": 10,
+    "camera": {
+      "offset": [
+        12,
+        4,
+        -7
+      ],
+      "fov": 42
+    },
+    "keys": []
+  },
+  {
+    "name": "porsche-pileup",
+    "level": 1,
+    "duration": 7,
+    "camera": {
+      "follow": "rival",
+      "offset": [
+        -8,
+        4,
+        -9
+      ],
+      "fov": 52
+    },
+    "keys": [
+      [
+        0,
+        9,
+        [
+          "ArrowUp"
+        ]
+      ],
+      [
+        1.2,
+        1.9,
+        [
+          "ArrowRight"
+        ]
+      ],
+      [
+        1.3,
+        9,
+        [
+          "Space"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "porsche-rearend",
+    "level": 1,
+    "duration": 7,
+    "camera": {
+      "follow": "rival",
+      "offset": [
+        -8,
+        4,
+        -9
+      ],
+      "fov": 52
+    },
+    "keys": [
+      [
+        0,
+        9,
+        [
+          "ArrowUp",
+          "Space"
+        ]
+      ],
+      [
+        0.3,
+        1,
+        [
+          "ArrowRight"
+        ]
+      ],
+      [
+        1,
+        1.6,
+        [
+          "ArrowLeft"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "porsche-race",
+    "level": 1,
+    "duration": 4,
+    "camera": {
+      "follow": "both",
+      "offset": [
+        10,
+        3.3,
+        -9
+      ],
+      "fov": 55
+    },
+    "keys": [
+      [
+        0,
+        4,
+        [
+          "ArrowUp"
+        ]
+      ],
+      [
+        2,
+        4,
+        [
+          "Space"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "factory-rings",
+    "level": 3,
+    "duration": 5,
+    "camera": {
+      "offset": [
+        7,
+        5,
+        -15
+      ],
+      "fov": 54
+    },
+    "keys": [
+      [
+        0,
+        6,
+        [
+          "Space"
+        ]
+      ],
+      [
+        0.75,
+        1.55,
+        [
+          "KeyQ",
+          "KeyW",
+          "KeyO",
+          "KeyP"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "factory-barrel",
+    "level": 3,
+    "duration": 9,
+    "camera": {
+      "offset": [
+        8,
+        5,
+        -15
+      ],
+      "fov": 54
+    },
+    "keys": [
+      [
+        0,
+        10,
+        [
+          "Space"
+        ]
+      ],
+      [
+        0.75,
+        1.55,
+        [
+          "KeyQ",
+          "KeyW",
+          "KeyO",
+          "KeyP"
+        ]
+      ],
+      [
+        2,
+        10,
+        [
+          "KeyQ",
+          "KeyO"
+        ]
+      ]
+    ]
+  }
+]

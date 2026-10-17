@@ -1,0 +1,12 @@
+[
+  {"name":"hero-orbit","level":null,"duration":6,"keys":[]},
+  {"name":"drag-left-spin","level":1,"duration":11,"camera":{"offset":[5,3.4,-7.2],"fov":44},"keys":[[0,1,["ArrowUp","Space"]],[1,2,["KeyQ","KeyW","KeyO","KeyP","Space"]],[2,11,["KeyQ","KeyO","Space"]]]},
+  {"name":"drag-right-spin","level":1,"duration":11,"camera":{"offset":[-6,3.1,-6.8],"fov":44},"keys":[[0,2,["ArrowUp","Space"]],[2,3,["KeyQ","KeyW","KeyO","KeyP","Space"]],[3,11,["KeyW","KeyP","Space"]]]},
+  {"name":"ramp-inversion","level":2,"duration":12,"keys":[]},
+  {"name":"ramp-barrel","level":2,"duration":11,"camera":{"offset":[12,4,-7],"fov":42},"keys":[[5,11,["KeyQ","KeyO","Space"]]]},
+  {"name":"garage-housewreck","level":0,"duration":11,"keys":[[0,0.5,["ArrowRight","ArrowUp"]],[0.5,11,["ArrowRight","ArrowUp","Space","KeyQ","KeyW"]]]},
+  {"name":"garage-backflip","level":0,"duration":10,"camera":{"offset":[3,2.8,-6.5],"fov":46},"keys":[[0,10,["KeyQ","KeyW","Space"]]]},
+  {"name":"drag-flyaway","level":1,"duration":7,"camera":{"offset":[4,3,-7],"fov":45},"keys":[[0,2.5,["KeyQ","KeyW","KeyO","KeyP","Space"]],[2.5,3.5,["KeyQ","Space"]]]},
+  {"name":"ramp-inversion-close","level":2,"duration":10,"camera":{"offset":[12,4,-7],"fov":42},"keys":[]},
+  {"name":"drag-keyboard-hud","level":1,"duration":8.5,"hud":true,"keys":[[0,1,["ArrowUp","Space"]],[1,2,["KeyQ","KeyW","KeyO","KeyP","Space"]],[2,8.5,["KeyQ","KeyO","Space"]]]}
+]

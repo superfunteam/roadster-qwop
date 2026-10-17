@@ -1,0 +1,32 @@
+{
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "duration": 60,
+  "segments": [
+    {"clip":"drag-left-spin","in":4.7,"duration":2.5},
+    {"clip":"hero-orbit","in":1,"duration":3.5,"overlay":"intro"},
+    {"clip":"garage-housewreck","in":0,"duration":3,"overlay":"garage"},
+    {"clip":"garage-housewreck","in":3,"duration":4},
+    {"clip":"garage-backflip","in":4.8,"duration":3},
+    {"clip":"drag-right-spin","in":0,"duration":3,"overlay":"drag"},
+    {"clip":"drag-keyboard-hud","in":2,"duration":3},
+    {"clip":"drag-left-spin","in":4.9,"duration":3},
+    {"clip":"drag-right-spin","in":6.2,"duration":2},
+    {"clip":"ramp-inversion","in":1,"duration":3,"overlay":"ramp"},
+    {"clip":"ramp-inversion-close","in":4,"duration":3},
+    {"clip":"ramp-inversion-close","in":7,"duration":3},
+    {"clip":"ramp-barrel","in":4,"duration":3},
+    {"clip":"ramp-barrel","in":5.6,"duration":2,"freeze":true,"overlay":"freeze"},
+    {"clip":"drag-flyaway","in":2,"duration":1.5,"overlay":"montage"},
+    {"clip":"garage-backflip","in":1.3,"duration":1.5},
+    {"clip":"ramp-barrel","in":5.4,"duration":1.5},
+    {"clip":"drag-right-spin","in":5,"duration":1.5},
+    {"clip":"garage-housewreck","in":6.1,"duration":1.5},
+    {"clip":"drag-flyaway","in":4.4,"duration":1.5},
+    {"clip":"drag-left-spin","in":5.5,"duration":1.5},
+    {"clip":"garage-backflip","in":4.6,"duration":2.5},
+    {"clip":"ramp-inversion-close","in":6.85,"duration":2},
+    {"clip":"hero-orbit","in":0,"duration":4,"overlay":"end"}
+  ]
+}

@@ -259,6 +259,21 @@ test("shared jet holds and lost pointer capture release only the affected finger
   } finally { await context.close(); }
 });
 
+test("a compatibility click on the gameplay HUD does not select its level identifier as a mission", async ({ browser, baseURL }) => {
+  const { page, context, errors } = await openGame(browser, baseURL);
+  try {
+    await start(page);
+    await expect(page.locator("#hud")).toHaveAttribute("data-level", "drag");
+    await page.locator("#hud-level-name").dispatchEvent("click");
+    expect(await page.evaluate(() => ({
+      selected: window.__roadster.ui.selected,
+      level: window.__roadster.selected,
+      mode: window.__roadster.mode,
+    }))).toEqual({ selected: 1, level: 1, mode: "game" });
+    expect(errors).toEqual([]);
+  } finally { await context.close(); }
+});
+
 for (const options of [{ name: "narrow desktop", width: 390, hybrid: false }, { name: "hybrid laptop", width: 1100, hybrid: true }]) {
   test(`${options.name} retains keyboard instructions and every physical driving control`, async ({ browser, baseURL }) => {
     const { page, context, errors } = await openGame(browser, baseURL, options.width, 844, { touch: false, hybrid: options.hybrid });

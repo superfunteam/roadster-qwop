@@ -10,3 +10,5 @@ playwright-report/
 test-results/
 # Local visual QA evidence; install screenshots ship from public/screenshots/.
 reference/qa/
+# Rendered trailer masters are deliverable files, not deployed game assets.
+output/roadster-trailer/

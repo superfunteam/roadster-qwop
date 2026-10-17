@@ -196,7 +196,7 @@ export class UI {
         this.actions(action.dataset.action);
         return;
       }
-      const mission = e.target.closest("[data-level]");
+      const mission = e.target.closest(".mission[data-level]");
       if (mission) this.select(+mission.dataset.level);
       if (e.target.closest(".brand")) {
         e.preventDefault();

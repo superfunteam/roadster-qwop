@@ -1333,14 +1333,22 @@ export function buildEnvironment(level, scene, physics) {
     goal = { position: FACTORY_RINGS[4].position, radius: FACTORY_RINGS[4].radius, heading: 0 };
   } else {
     lighting = lights(true);
-    box(
-      [230, 1, 300],
-      [0, -0.5, 25],
-      material("#a5b0bc", 0.88, 0.12, {
-        map: surfaceTexture("#353b41", 17, [40, 50], true),
-      }),
-      { collider: true, cast: false },
-    );
+    const apron = material("#a5b0bc", 0.88, 0.12, {
+      map: surfaceTexture("#353b41", 17, [40, 50], true),
+    });
+    // Keep the landing collider perfectly flat, but leave an actual opening in
+    // its visible apron for the runway. Two surfaces at y=0 were fighting for
+    // the same depth pixels, particularly as the camera moved along the road.
+    physics?.addBox?.({
+      position: [0, -0.5, 25], size: [230, 1, 300], rotation: [0, 0, 0],
+      mass: 0, friction: 0.7, restitution: 0.13, label: "scenery",
+    });
+    const halfRoad = RAMP.width / 2;
+    const sideWidth = 115 - halfRoad;
+    for (const side of [-1, 1])
+      box([sideWidth, 1, 300], [side * (halfRoad + sideWidth / 2), -0.5, 25], apron, { cast: false });
+    box([RAMP.width, 1, 95], [0, -0.5, -77.5], apron, { cast: false });
+    box([RAMP.width, 1, 133], [0, -0.5, 108.5], apron, { cast: false });
     const road = material("#aeb5c0", 0.68, 0.2, {
       map: surfaceTexture("#454a50", 10, [2, 9]),
     });

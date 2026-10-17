@@ -3,6 +3,9 @@ import { getControlMode } from "./control-mode.js";
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const axisWithDeadzone = (value) =>
   Math.abs(value) <= 0.15 ? 0 : Math.sign(value) * (Math.abs(value) - 0.15) / 0.85;
+const controlKeys = {
+  throttle: "ArrowUp", brake: "ArrowDown", left: "ArrowLeft", right: "ArrowRight", boost: "Space",
+};
 
 export class Input {
   constructor({ onAction = () => {} } = {}) {
@@ -13,6 +16,7 @@ export class Input {
     this.padPointers = new Map();
     this.captureTargets = new Map();
     this.boundElements = new WeakSet();
+    this.controlElements = new Set();
     this.onAction = onAction;
     this.enabled = false;
     this.down = (e) => {
@@ -43,10 +47,12 @@ export class Input {
         if (key === "KeyM") onAction("mute");
       }
       this.keys.add(key);
+      this.syncControls();
     };
     this.up = (e) => {
       this.keys.delete(e.code);
       this.blockedKeys.delete(e.code);
+      this.syncControls();
     };
     window.addEventListener("keydown", this.down);
     window.addEventListener("keyup", this.up);
@@ -79,13 +85,30 @@ export class Input {
       this.updatePad(pad, e);
     }, { passive: false });
   }
+  get enabled() { return this._enabled; }
+  set enabled(value) {
+    this._enabled = Boolean(value);
+    this.syncControls();
+  }
+  syncControl(element) {
+    const key = controlKeys[element.dataset.control];
+    const keyboardHeld = key && this.keys.has(key) && !this.blockedKeys.has(key);
+    // A pointer belongs to its particular button; keyboard input lights every
+    // presentation of that control, including the duplicate mobile boost pad.
+    const pointerHeld = [...this.captureTargets.values()].includes(element);
+    element.classList.toggle("held", this.enabled && Boolean(keyboardHeld || pointerHeld));
+  }
+  syncControls() {
+    for (const element of this.controlElements) this.syncControl(element);
+  }
   releasePointer(pointerId) {
     const target = this.captureTargets.get(pointerId);
     const pad = this.padPointers.get(pointerId);
     this.pointers.delete(pointerId);
     this.padPointers.delete(pointerId);
     this.captureTargets.delete(pointerId);
-    if (target && ![...this.captureTargets.values()].includes(target))
+    if (target?.dataset.control) this.syncControl(target);
+    else if (target && ![...this.captureTargets.values()].includes(target))
       target.classList.remove("held");
     if (pad) this.syncPad(pad.element);
     try {
@@ -97,6 +120,8 @@ export class Input {
     container.querySelectorAll("[data-control]").forEach((el) => {
       if (this.boundElements.has(el)) return;
       this.boundElements.add(el);
+      this.controlElements.add(el);
+      this.syncControl(el);
       el.addEventListener("pointerdown", (e) => {
         if (!this.enabled || (e.pointerType === "mouse" && e.button !== 0))
           return;
@@ -109,7 +134,7 @@ export class Input {
         } catch {}
         this.pointers.set(e.pointerId, el.dataset.control);
         this.captureTargets.set(e.pointerId, el);
-        el.classList.add("held");
+        this.syncControl(el);
       });
       const release = (e) => this.releasePointer(e.pointerId);
       el.addEventListener("pointerup", release);
