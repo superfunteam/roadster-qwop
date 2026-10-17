@@ -22,8 +22,8 @@ export const LEVELS = [
     tag: "Unreasonably quick.",
     difficulty: "ACCELERATION",
     description:
-      "Four hundred metres. A very questionable power-to-weight ratio.",
-    goal: "Cross the finish line. Wheels down is a nice touch.",
+      "A Porsche in the other lane. Four hundred metres to settle things.",
+    goal: "Beat the Porsche to the 402-metre finish.",
     hint: "Hold ↑ to drive. SPACE adds rear thrust. Use short jet bursts to stay level.",
     touchHint: "Hold Boost for speed. Tap Lift for air.",
     distance: "402 m",
@@ -244,6 +244,7 @@ export class UI {
         "pressure-fill",
         "game-message",
         "flight-tip",
+        "hud-goal",
         "ring-objective",
         "ring-count",
         "ring-total",
@@ -296,6 +297,7 @@ export class UI {
       .querySelector(".drive-controls")
       .classList.toggle("autodrive", level.id === "ramp");
     this.lastOutcome = null;
+    this.raceStatus = null;
   }
   home() {
     this.close();
@@ -317,6 +319,19 @@ export class UI {
       `${Math.round(s.pressure * 100)}%`;
     this.refs["pressure-fill"].style.transform = `scaleX(${s.pressure})`;
     if (level.id === "factory") this.updateRings(s.ringCount || 0, s.ringGoal || 5, s.ringTotal || 10);
+    if (level.id === "drag" && s.rival) {
+      const gap = s.rival.position.z - s.position.z;
+      const status = s.outcome === "beaten" ? "Porsche takes the race."
+        : s.outcome === "success" ? "You crossed first. Porsche would like a rematch."
+        : s.crashed ? (s.rival.crashed ? "Both cars · DNF." : "Your Roadster · DNF.")
+        : s.rival.crashed ? "Porsche · DNF. Finish your run."
+        : Math.abs(gap) < 0.75 ? "Porsche · Side by side."
+        : `Porsche · ${Math.round(Math.abs(gap))} m ${gap > 0 ? "ahead" : "behind"}.`;
+      if (status !== this.raceStatus) {
+        this.refs["hud-goal"].textContent = status;
+        this.raceStatus = status;
+      }
+    }
     const progress =
       level.id === "factory"
         ? Math.min(1, (s.ringCount || 0) / (s.ringGoal || 5))
@@ -458,7 +473,8 @@ export class UI {
   }
   result(s, level, best) {
     const win = s.outcome === "success",
-      fly = s.outcome === "flyaway";
+      fly = s.outcome === "flyaway",
+      beaten = s.outcome === "beaten";
     const winTitle = {
       garage: "Garage departed.<br>Mostly intact.",
       drag: "That was<br>unnecessary.",
@@ -466,8 +482,11 @@ export class UI {
       factory: "Five rings.<br>One whole car.",
     }[level.id] || "Test complete.";
     const finalTest = LEVELS.indexOf(level) === LEVELS.length - 1;
+    const rivalResult = level.id === "drag" && s.rival
+      ? `<p class="record">PORSCHE · ${s.rival.crashed ? "DID NOT FINISH" : s.rival.finishTime !== null ? `${s.rival.finishTime.toFixed(2)}s` : win ? "BEHIND YOU AT THE LINE" : "RACE UNFINISHED"}</p>`
+      : "";
     this.modal(
-      `<p class="eyebrow">TEST ${level.number} / ${win ? "COMPLETE" : "UNSCHEDULED CONCLUSION"}</p><h2 id="dialog-title">${win ? winTitle : fly ? "We have lost<br>the vehicle." : s.damage >= 95 ? "Rapid unscheduled<br>disassembly." : "A bold interpretation<br>of landing."}</h2><p class="dialog-intro">${win ? (level.id === "factory" ? "Flight certification: surprisingly plausible." : level.id === "ramp" ? "You made gravity look optional." : "The test engineers are cautiously impressed.") : fly ? "The warranty does not cover low Earth orbit." : "The data is invaluable. The car, less so."}</p><div class="result-stats"><div><b>${s.time.toFixed(2)}<small>s</small></b><p>TEST TIME</p></div><div><b>${Math.round(s.maxSpeed * 3.6)}<small>km/h</small></b><p>TOP SPEED</p></div><div><b>${level.id === "factory" ? `${s.ringCount || 0}<small>/ ${s.ringGoal || 5}</small>` : `${s.maxAltitude.toFixed(1)}<small>m</small>`}</b><p>${level.id === "factory" ? "RINGS CLEARED" : "MAX ALTITUDE"}</p></div></div>${best ? `<p class="record">PERSONAL BEST · ${best.toFixed(2)}s</p>` : ""}<div class="dialog-buttons"><button class="primary-button wide" data-action="${win ? "next" : "reset"}">${win ? (finalTest ? "Back to hangar" : "Next test") : "Try that again"} ${svg("arrow")}</button><button class="secondary-button" data-action="${win ? "reset" : "home"}">${win ? "Replay test" : "Return to hangar"}</button></div>`,
+      `<p class="eyebrow">TEST ${level.number} / ${win ? "COMPLETE" : "UNSCHEDULED CONCLUSION"}</p><h2 id="dialog-title">${win ? winTitle : beaten ? "Porsche takes it.<br>Try the rockets." : fly ? "We have lost<br>the vehicle." : s.damage >= 95 ? "Rapid unscheduled<br>disassembly." : "A bold interpretation<br>of landing."}</h2><p class="dialog-intro">${win ? (level.id === "factory" ? "Flight certification: surprisingly plausible." : level.id === "ramp" ? "You made gravity look optional." : "The test engineers are cautiously impressed.") : beaten ? "No extra points for conserving rocket fuel. Give it another run." : fly ? "The warranty does not cover low Earth orbit." : "The data is invaluable. The car, less so."}</p><div class="result-stats"><div><b>${s.time.toFixed(2)}<small>s</small></b><p>TEST TIME</p></div><div><b>${Math.round(s.maxSpeed * 3.6)}<small>km/h</small></b><p>TOP SPEED</p></div><div><b>${level.id === "factory" ? `${s.ringCount || 0}<small>/ ${s.ringGoal || 5}</small>` : `${s.maxAltitude.toFixed(1)}<small>m</small>`}</b><p>${level.id === "factory" ? "RINGS CLEARED" : "MAX ALTITUDE"}</p></div></div>${rivalResult}${best ? `<p class="record">PERSONAL BEST · ${best.toFixed(2)}s</p>` : ""}<div class="dialog-buttons"><button class="primary-button wide" data-action="${win ? "next" : "reset"}">${win ? (finalTest ? "Back to hangar" : "Next test") : "Try that again"} ${svg("arrow")}</button><button class="secondary-button" data-action="${win ? "reset" : "home"}">${win ? "Replay test" : "Return to hangar"}</button></div>`,
       "result",
     );
   }

@@ -41,8 +41,8 @@ Haptics use the Vibration API where supported; browsers without it remain fully 
 
 ## Flight tests
 
-1. **The garage:** clear a home garage filled with 57 physical storage props. Racks, tools, cartons, a charger, and a bicycle frame the scene. Reach the driveway marker.
-2. **The quarter mile:** cover 402 metres of drag strip. Rear rockets dramatically shorten the run; vertical jets make it interesting.
+1. **The garage:** clear a home garage filled with 57 physical storage props. Racks, tools, cartons, a charger, and a bicycle frame the scene. Reach the driveway marker. Walls, overhead structure and clutter temporarily cut away when they block the chase camera, keeping the entire car visible without removing collision surfaces.
+2. **The quarter mile:** race a yellow Porsche to the 402-metre finish. Both cars launch together; rear rockets can beat its roughly 9.3-second run. The rival uses physical suspension and tire forces, and hard collisions can turn it into a burning, disassembled wreck. Gentle bumps dent it without triggering a blast.
 3. **The inversion:** autodrive approaches a 24-metre vertical return ramp. Ride the arc inverted, use short front and rear pulses to rotate, then stick a near-level landing. After actual upper-ramp contact, the suspension catches a controlled, nearly upright return from the ramp; nose-first, roof-first and wall impacts still cause damage.
 
 4. **The Gigafactory:** a huge indoor flight hall with ten glowing, numbered rings. Fly through any five different rings without wrecking to win. Rings work in either direction; hovering beside one, revisiting it, or driving under it does not count. The first five form a gentle central route; the outer gates reward more adventurous flying. Collected rings turn green and reset with the run.

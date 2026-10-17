@@ -1,5 +1,6 @@
 import * as CANNON from "cannon-es";
 import { FACTORY_RINGS, FACTORY_RING_GOAL, FACTORY_BOUNDS } from "./flight-course.js";
+import { RivalPhysics } from "./rival-physics.js";
 
 // Metres, seconds, kilograms. +Z is the nose of the car; +Y is up.
 export const PHYSICS = Object.freeze({
@@ -38,8 +39,9 @@ const KEYS = ["q", "w", "o", "p"];
 
 /** Four independent cold-gas jets on an ordinary, very heavy rigid body. */
 export class PhysicsGame {
-  constructor({ onImpact } = {}) {
+  constructor({ onImpact, onRivalImpact } = {}) {
     this.onImpact = onImpact;
+    this.onRivalImpact = onRivalImpact;
     this.world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.81, 0) });
     this.world.broadphase = new CANNON.SAPBroadphase(this.world);
     this.world.solver.iterations = 16;
@@ -125,6 +127,8 @@ export class PhysicsGame {
   setLevel(id) {
     if (!["garage", "drag", "ramp", "factory"].includes(id))
       throw new Error(`Unknown driving level: ${id}`);
+    this.rival?.dispose();
+    this.rival = null;
     for (const body of this.levelBodies) this.world.removeBody(body);
     this.levelBodies = [];
     this.props = [];
@@ -138,6 +142,14 @@ export class PhysicsGame {
     ground.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
     this.world.addBody(ground);
     this.levelBodies.push(ground);
+    if (id === "drag") {
+      this.rival = new RivalPhysics({
+        world: this.world,
+        material: this.carMaterial,
+        playerBody: this.body,
+        onImpact: (event) => this.onRivalImpact?.(event),
+      });
+    }
     this.reset();
   }
 
@@ -227,6 +239,7 @@ export class PhysicsGame {
     this._collectedRings = new Set();
     this.collectedRings = [];
     this.rampStage = "approach";
+    this.dragFinishTime = null;
     this.outcome = null;
     this.crashed = false;
     this.exploded = false;
@@ -235,23 +248,33 @@ export class PhysicsGame {
     this.maxSpeed = 0;
     this.flipAngle = 0;
     this._strandedTime = 0;
+    this.rival?.reset();
   }
 
   step(dt, input = {}) {
     if (!Number.isFinite(dt) || dt <= 0) return this.state;
     const previousOutcome = this.outcome;
+    const previousRivalFinish = this.rival?.finishTime ?? null;
     this._accumulator += Math.min(dt, 0.1);
     while (this._accumulator + 1e-10 >= PHYSICS.fixedStep) {
       this._flightPrevious.copy(this.body.position);
       this._integrate(PHYSICS.fixedStep, input);
+      this.rival?.step(PHYSICS.fixedStep, { raceFinished: !!this.outcome });
       this.world.step(PHYSICS.fixedStep);
+      this.rival?.afterStep(PHYSICS.fixedStep);
       this._afterStep(PHYSICS.fixedStep);
       this._accumulator -= PHYSICS.fixedStep;
     }
     // A rendered frame can contain several fixed ticks. A fatal collision later
     // in this same frame takes precedence over crossing the line a tick earlier.
     // A result already delivered by a previous frame remains an achieved result.
-    if (!previousOutcome && this.crashed && this.outcome === "success") {
+    if (previousRivalFinish === null && this.rival?.crashed && this.rival.finishTime !== null) {
+      this.rival.finishTime = null;
+      if (!previousOutcome && this.outcome === "beaten") {
+        this.outcome = this.crashed ? "wrecked" : this.dragFinishTime !== null ? "success" : null;
+      }
+    }
+    if (!previousOutcome && this.crashed && ["success", "beaten"].includes(this.outcome)) {
       this.outcome = "wrecked";
     }
     return this.state;
@@ -714,12 +737,20 @@ export class PhysicsGame {
       this._up.y > 0.3
     ) {
       this.outcome ||= "success";
-    } else if (
-      this.level === "drag" &&
-      position.z >= 402 &&
-      Math.abs(position.x) < 22
-    ) {
-      this.outcome ||= "success";
+    } else if (this.level === "drag") {
+      if (this.dragFinishTime === null && position.z >= 402 && Math.abs(position.x) < 22) {
+        const dz = position.z - this._flightPrevious.z;
+        const fraction = dz > 0 ? clamp((402 - this._flightPrevious.z) / dz, 0, 1) : 1;
+        this.dragFinishTime = this.time - dt * (1 - fraction);
+      }
+      if (!this.outcome) {
+        const rivalFinish = this.rival?.finishTime;
+        if (this.dragFinishTime !== null && (rivalFinish == null || this.dragFinishTime <= rivalFinish + 1e-8)) {
+          this.outcome = "success";
+        } else if (rivalFinish != null) {
+          this.outcome = "beaten";
+        }
+      }
     }
     if (this.damage >= 100) {
       this.crashed = true;
@@ -799,6 +830,8 @@ export class PhysicsGame {
       outcome: this.outcome,
       rampStage: this.rampStage,
       ringCount: this._collectedRings.size,
+      rival: this.rival?.state ?? null,
+      dragFinishTime: this.dragFinishTime,
       ringGoal: FACTORY_RING_GOAL,
       ringTotal: FACTORY_RINGS.length,
       collectedRings: this.collectedRings,

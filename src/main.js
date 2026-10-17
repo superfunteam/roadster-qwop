@@ -9,6 +9,8 @@ import { PhysicsGame } from "./physics.js";
 import { buildEnvironment } from "./environments.js";
 import { BoosterEffects } from "./effects.js";
 import { WreckEffects } from "./wreck.js";
+import { RivalPresentation } from "./rival.js";
+import { CameraVisibility } from "./camera-visibility.js";
 import { Input } from "./input.js";
 import { getControlMode, subscribeControlMode } from "./control-mode.js";
 import { GameAudio } from "./audio.js";
@@ -117,6 +119,8 @@ let mode = "menu",
   paused = false,
   windowBlurred = false,
   environment = null,
+  rivalPresentation = null,
+  cameraVisibility = null,
   studio = null,
   selected = 0,
   cameraMode = 0,
@@ -141,6 +145,14 @@ let countdown = 0,
   hudTick = 0,
   lastFrame = performance.now();
 const physics = new PhysicsGame({
+  onRivalImpact: (event) => {
+    rivalPresentation?.impact(event);
+    // A collision between the cars already plays through the player callback.
+    if (event.body !== physics.body) {
+      effects.impact(event);
+      audio.impact(event);
+    }
+  },
   onImpact: (e) => {
     if (mode !== "game") return;
     pendingImpacts.push(e);
@@ -169,7 +181,7 @@ const physics = new PhysicsGame({
 const effects = new BoosterEffects(scene, car);
 const wreck = new WreckEffects(scene, physics, car);
 const graphics = new GraphicsPipeline(renderer, scene, camera, {
-  excludedEffects: () => [effects.flames, ...(wreck.aoExcluded || [])],
+  excludedEffects: () => [effects.flames, ...(wreck.aoExcluded || []), ...(rivalPresentation?.wreck.aoExcluded || [])],
 });
 let graphicsLost = false, graphicsLosses = 0, graphicsRecoveryTimer;
 const ui = new UI(action, settings);
@@ -357,6 +369,10 @@ function home() {
   wreckStarted = false;
   aftermathTime = 0;
   blastFlash = 0;
+  rivalPresentation?.dispose();
+  rivalPresentation = null;
+  cameraVisibility?.dispose();
+  cameraVisibility = null;
   environment?.dispose();
   environment = null;
   studio?.dispose();
@@ -381,6 +397,10 @@ function startLevel(index = selected) {
   wreckStarted = false;
   aftermathTime = 0;
   blastFlash = 0;
+  rivalPresentation?.dispose();
+  rivalPresentation = null;
+  cameraVisibility?.dispose();
+  cameraVisibility = null;
   studio?.dispose();
   studio = null;
   environment?.dispose();
@@ -388,6 +408,19 @@ function startLevel(index = selected) {
   physics.setLevel(LEVELS[index].id);
   audio.beginRun(LEVELS[index].id);
   environment = buildEnvironment(LEVELS[index].id, scene, physics);
+  cameraVisibility = new CameraVisibility(environment.cameraOccluders || []);
+  if (physics.rival) rivalPresentation = new RivalPresentation(scene, physics, {
+    onExplosion: (state) => {
+      const distance = physics.body.position.distanceTo(state.position);
+      audio.explosion();
+      if (distance < 30) {
+        shake = Math.max(shake, 0.55 * (1 - distance / 30));
+        blastFlash = Math.max(blastFlash, reducedMotion ? 0.06 : 0.3);
+        vibrate([60, 40, 90]);
+      }
+      if (!physics.crashed) ui.message("Porsche has left the competition. In several pieces.", 3600);
+    },
+  });
   scene.environmentIntensity = index === 2 ? 0.38 : 0.6;
   effects.clear();
   car.setDamage(0);
@@ -407,6 +440,8 @@ function startLevel(index = selected) {
       ? "Autodrive engaged. You have the boosters."
       : index === 3
         ? "Ten rings. Fly through any five. Keep the car in one piece."
+      : index === 1
+        ? "Porsche in the other lane. First to 402 metres wins."
       : "Flight systems armed.",
   );
   updateCar(physics.state, 0);
@@ -431,6 +466,8 @@ function reset() {
   aftermathTime = 0;
   blastFlash = 0;
   physics.reset();
+  rivalPresentation?.reset();
+  cameraVisibility?.reset();
   audio.beginRun(LEVELS[selected].id);
   effects.clear();
   environment?.update(0);
@@ -679,6 +716,8 @@ function updateCamera(dt, snap = false) {
       ) * Math.min(1, dt * 4);
   }
   const isRamp = LEVELS[selected].id === "ramp";
+  const rivalGap = s.rival ? Math.abs(s.rival.position.z - s.position.z) : Infinity;
+  const rivalFraming = s.rival && !s.rival.crashed ? Math.max(0, 1 - rivalGap / 45) : 0;
   if (cameraMode === 1 || (isRamp && cameraMode !== 2)) {
     vCamera.set(
       s.position.x + 23,
@@ -693,7 +732,7 @@ function updateCamera(dt, snap = false) {
     vTarget.set(s.position.x, s.position.y + 1, s.position.z + 1.3);
   } else {
     const close = cameraMode === 2,
-      distance = close ? 5.8 : isFactory ? (portrait ? 20 : 15) : landscapePhone ? 8.8 : portrait ? 11.4 : 8.8;
+      distance = close ? 5.8 : isFactory ? (portrait ? 20 : 15) : rivalFraming > 0 ? (portrait ? 20 : 11.5) : landscapePhone ? 8.8 : portrait ? 11.4 : 8.8;
     const offset = new THREE.Vector3(
       close ? 1.8 : isFactory ? 0.6 : 3.3,
       close ? 2.3 : isFactory && portrait ? 5.5 : selected === 0 ? 3.3 : 3.6,
@@ -709,6 +748,8 @@ function updateCamera(dt, snap = false) {
           followYaw,
         ),
       );
+    if (!close && rivalFraming > 0)
+      vTarget.x += THREE.MathUtils.clamp((s.rival.position.x - s.position.x) * 0.5, -4, 4) * rivalFraming;
   }
   if (wreckStarted) {
     vCamera.sub(vPosition).multiplyScalar(1.22).add(vPosition);
@@ -729,6 +770,7 @@ function updateCamera(dt, snap = false) {
     Math.min(1, dt * 3),
   );
   camera.updateProjectionMatrix();
+  cameraVisibility?.update(camera, car.group, dt);
 }
 function finish(s) {
   resultShown = true;
@@ -920,6 +962,7 @@ function animate(now) {
       vibrate([120, 60, 180, 80, 80]);
     }
     physics.setMissingWheels(car.wheels.map((wheel) => !wheel.visible));
+    rivalPresentation?.update(paused ? 0 : dt);
     environment?.update(paused ? 0 : dt);
     effects.update(paused ? 0 : dt, state);
     wreck.update(paused ? 0 : dt, state);
@@ -1002,6 +1045,8 @@ if (import.meta.env.DEV)
     renderer,
     graphics,
     get environment() { return environment; },
+    get rivalPresentation() { return rivalPresentation; },
+    get cameraVisibility() { return cameraVisibility; },
     get graphicsLost() { return graphicsLost; },
     get graphicsLosses() { return graphicsLosses; },
     ui,

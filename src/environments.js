@@ -343,7 +343,7 @@ export function buildEnvironment(level, scene, physics) {
     }
     terrain.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     terrain.computeVertexNormals();
-    mesh(
+    const terrainMesh = mesh(
       terrain,
       material("#ffffff", 1, 0, { vertexColors: true }),
       [0, 0, id === "drag" ? 240 : 25],
@@ -351,6 +351,7 @@ export function buildEnvironment(level, scene, physics) {
       group,
       false,
     );
+    terrainMesh.userData.cameraGround = true;
   }
   function pole(x, z, height = 8, night = false) {
     cylinder(0.08, height, [x, height / 2, z], standard.darkMetal, {
@@ -1613,6 +1614,25 @@ export function buildEnvironment(level, scene, physics) {
   const dynamicRoots = new Set(props.map((prop) => prop.mesh));
   const batches = new Map();
   group.updateMatrixWorld(true);
+  const cameraBounds = new THREE.Box3();
+  const cameraCenter = new THREE.Vector3();
+  const cameraSize = new THREE.Vector3();
+  if (id === "garage") group.traverse((object) => {
+    if (!object.isMesh || object.userData.cameraGround) return;
+    object.geometry.computeBoundingBox();
+    cameraBounds.copy(object.geometry.boundingBox).applyMatrix4(object.matrixWorld);
+    // Floors remain solid. Every raised object, including moving cartons and
+    // shelving, can make a cutaway when it covers the car from the chosen view.
+    if (cameraBounds.max.y <= 0.2) return;
+    object.userData.cameraOccluder = true;
+    cameraBounds.getCenter(cameraCenter);
+    cameraBounds.getSize(cameraSize);
+    // Keep walls and roof pieces separate; small details still batch locally.
+    // A material shared by a wall and every shelf must never erase the whole room.
+    object.userData.cameraBatch = Math.max(cameraSize.x, cameraSize.y, cameraSize.z) > 4
+      ? object.uuid
+      : `${Math.floor(cameraCenter.x / 3)}:${Math.floor(cameraCenter.y / 3)}:${Math.floor(cameraCenter.z / 3)}`;
+  });
   group.traverse((object) => {
     if (!object.isMesh || object.material.transparent) return;
     for (
@@ -1621,7 +1641,7 @@ export function buildEnvironment(level, scene, physics) {
       parent = parent.parent
     )
       if (dynamicRoots.has(parent) || animatedRoots.has(parent)) return;
-    const key = `${object.material.uuid}:${object.castShadow}`;
+    const key = `${object.material.uuid}:${object.castShadow}:${object.userData.cameraBatch || "ground"}`;
     if (!batches.has(key)) batches.set(key, []);
     batches.get(key).push(object);
   });
@@ -1641,6 +1661,7 @@ export function buildEnvironment(level, scene, physics) {
     object.castShadow = objects[0].castShadow;
     object.receiveShadow = true;
     object.name = "Batched static scenery";
+    object.userData.cameraOccluder = !!objects[0].userData.cameraOccluder;
     geometries.add(combined);
     group.add(object);
     for (const source of objects) {
@@ -1650,11 +1671,17 @@ export function buildEnvironment(level, scene, physics) {
     }
   }
 
+  const cameraOccluders = [];
+  if (id === "garage") group.traverse((object) => {
+    if (object.isMesh && object.userData.cameraOccluder) cameraOccluders.push(object);
+  });
+
   return {
     id,
     group,
     props,
     rings,
+    cameraOccluders,
     spawn,
     goal,
     lighting,
