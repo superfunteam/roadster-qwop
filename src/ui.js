@@ -1,4 +1,5 @@
 import { getControlMode, subscribeControlMode } from "./control-mode.js";
+import "./factory-ui.css";
 
 export const LEVELS = [
   {
@@ -41,6 +42,19 @@ export const LEVELS = [
     touchHint: "The car drives itself. Pulse Nose up at the lip.",
     distance: "24 m high",
     time: "~ 15 sec",
+  },
+  {
+    id: "factory",
+    number: "04",
+    name: "The Gigafactory",
+    tag: "Some assembly required.",
+    difficulty: "FLIGHT COURSE",
+    description: "Ten glowing rings. Fly through any five. Keep the car in one piece.",
+    goal: "Fly through 5 of 10 rings without crashing.",
+    hint: "Hold Q W O P to lift. SPACE adds forward thrust. Pulse opposing jets to stay level.",
+    touchHint: "Hold Lift to rise. Boost carries you forward. Slide to tilt; let go early.",
+    distance: "10 rings",
+    time: "5 to win",
   },
 ];
 export const icons = {
@@ -114,10 +128,10 @@ export class UI {
         <div class="spec-rail"><div><b>04</b><p>INDEPENDENT<br>THRUSTERS</p></div><div><b>00</b><p>FLIGHT<br>ASSISTANCE</p></div><div><b>∞</b><p>POSSIBLE<br>REGRETS</p></div></div>
         <div class="hero-index"><i></i><p>FLIGHT PACKAGE<br><span>PROTOTYPE 001</span></p></div>
         <div class="orbit-hint">${inputCopy("DRAG TO INSPECT", "SWIPE TO INSPECT")} <span>↔</span></div>
-        <div class="mission-panel"><div class="mission-topline"><p class="eyebrow">SELECT YOUR TEST</p><p class="tiny">THREE TESTS. NO GUARANTEES.</p></div><div class="mission-layout"><div class="mission-grid" role="group" aria-label="Select a level">${LEVELS.map((level, i) => `<button class="mission ${i === 0 ? "selected" : ""}" data-level="${i}" aria-pressed="${i === 0}"><div class="mission-image image-${level.id}"><span>${level.number}</span><i>${i === 0 ? "SELECTED" : "AVAILABLE"}</i></div><div class="mission-info"><h2>${level.name}</h2><p>${level.tag}</p></div><div class="mission-line"></div></button>`).join("")}</div><div class="launch-panel"><div class="launch-description"><p id="selected-type" class="eyebrow">${LEVELS[0].difficulty}</p><p id="selected-description">${LEVELS[0].description}</p></div><button class="primary-button" data-action="start">Begin test ${svg("arrow")}</button><p class="launch-note">${inputCopy("Q W O P TO FLY · ARROW KEYS TO DRIVE", "LEFT THUMB DRIVES · RIGHT THUMB FLIES")}</p></div></div>${playerGuide}<footer class="hangar-footer"><p>ENGINEERED TO FLY. <span>OPERATED BY YOU.</span></p><p>SUPERFUN GAMES <span>© 2026</span></p></footer></div>
+        <div class="mission-panel"><div class="mission-topline"><p class="eyebrow">SELECT YOUR TEST</p><p class="tiny">${LEVELS.length} TESTS. NO GUARANTEES.</p></div><div class="mission-layout"><div class="mission-grid" role="group" aria-label="Select a level">${LEVELS.map((level, i) => `<button class="mission ${i === 0 ? "selected" : ""}" data-level="${i}" aria-pressed="${i === 0}"><div class="mission-image image-${level.id}"><span>${level.number}</span><i>${i === 0 ? "SELECTED" : "AVAILABLE"}</i></div><div class="mission-info"><h2>${level.name}</h2><p>${level.tag}</p></div><div class="mission-line"></div></button>`).join("")}</div><div class="launch-panel"><div class="launch-description"><p id="selected-type" class="eyebrow">${LEVELS[0].difficulty}</p><p id="selected-description">${LEVELS[0].description}</p></div><button class="primary-button" data-action="start">Begin test ${svg("arrow")}</button><p class="launch-note">${inputCopy("Q W O P TO FLY · ARROW KEYS TO DRIVE", "LEFT THUMB DRIVES · RIGHT THUMB FLIES")}</p></div></div>${playerGuide}<footer class="hangar-footer"><p>ENGINEERED TO FLY. <span>OPERATED BY YOU.</span></p><p>SUPERFUN GAMES <span>© 2026</span></p></footer></div>
       </section>
       <section id="hud" hidden aria-label="Game controls and telemetry">
-        <div class="hud-top"><div class="mission-title"><p class="eyebrow" id="hud-level-number">TEST 01 / ORIENTATION</p><h2 id="hud-level-name">The garage</h2><p id="hud-goal"></p></div><div class="hud-top-right"><div class="time-display"><p class="eyebrow">ELAPSED</p><div id="timer">00:00.00</div></div><button class="icon-button" data-action="pause" aria-label="Pause game">${svg("pause")}</button></div></div>
+        <div class="hud-top"><div class="mission-title"><p class="eyebrow" id="hud-level-number">TEST 01 / ORIENTATION</p><h2 id="hud-level-name">The garage</h2><div class="ring-objective" id="ring-objective" hidden><div class="ring-objective-heading"><span>RINGS</span><b id="ring-count" aria-live="polite" aria-atomic="true">0 / 5</b><small id="ring-total">10 AVAILABLE</small></div><div class="ring-objective-track" id="ring-objective-track" role="progressbar" aria-label="Rings cleared" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0"><i id="ring-progress"></i></div></div><p id="hud-goal"></p></div><div class="hud-top-right"><div class="time-display"><p class="eyebrow">ELAPSED</p><div id="timer">00:00.00</div></div><button class="icon-button" data-action="pause" aria-label="Pause game">${svg("pause")}</button></div></div>
         <div class="progress-track"><i id="level-progress"></i></div>
         <div id="game-message" aria-live="polite"></div>
         <div class="telemetry"><div class="speed-readout"><b id="speed">0</b><p>KM/H</p></div><div class="telemetry-detail"><div><p>ALTITUDE</p><b id="altitude">0.0 <small>m</small></b></div><div><p>HULL</p><b id="hull">100<small>%</small></b></div></div></div>
@@ -230,6 +244,11 @@ export class UI {
         "pressure-fill",
         "game-message",
         "flight-tip",
+        "ring-objective",
+        "ring-count",
+        "ring-total",
+        "ring-progress",
+        "ring-objective-track",
       ].map((id) => [id, document.getElementById(id)]),
     );
     this.jetButtons = [...document.querySelectorAll(".jet-button")];
@@ -260,6 +279,9 @@ export class UI {
     document.querySelector("#hangar").hidden = true;
     document.querySelector("#hud").hidden = false;
     document.body.classList.add("playing");
+    document.querySelector("#hud").dataset.level = level.id;
+    this.refs["ring-objective"].hidden = level.id !== "factory";
+    this.updateRings(0, 5, 10);
     document.querySelector("#hud-level-number").textContent =
       `TEST ${level.number} / ${level.difficulty}`;
     document.querySelector("#hud-level-name").textContent = level.name;
@@ -294,8 +316,11 @@ export class UI {
     this.refs["pressure-value"].textContent =
       `${Math.round(s.pressure * 100)}%`;
     this.refs["pressure-fill"].style.transform = `scaleX(${s.pressure})`;
+    if (level.id === "factory") this.updateRings(s.ringCount || 0, s.ringGoal || 5, s.ringTotal || 10);
     const progress =
-      level.id === "ramp"
+      level.id === "factory"
+        ? Math.min(1, (s.ringCount || 0) / (s.ringGoal || 5))
+        : level.id === "ramp"
         ? s.rampStage === "landed"
           ? 1
           : s.rampStage === "airborne"
@@ -350,6 +375,18 @@ export class UI {
       .querySelector(".flight-status")
       .classList.toggle("critical", s.damage > 65);
     this.recovery(s.recoveryRemaining);
+  }
+  updateRings(count, goal, total) {
+    const key = `${count}/${goal}/${total}`;
+    if (this.ringProgressKey === key) return;
+    this.ringProgressKey = key;
+    const label = `${count} / ${goal}`;
+    if (this.refs["ring-count"].textContent !== label)
+      this.refs["ring-count"].textContent = label;
+    this.refs["ring-total"].textContent = `${Math.max(0, total - count)} AVAILABLE`;
+    this.refs["ring-progress"].style.transform = `scaleX(${Math.min(1, count / goal)})`;
+    this.refs["ring-objective-track"].setAttribute("aria-valuenow", count);
+    this.refs["ring-objective-track"].setAttribute("aria-valuemax", goal);
   }
   recovery(remaining) {
     const seconds = Number.isFinite(remaining) ? Math.ceil(remaining) : null;
@@ -422,8 +459,15 @@ export class UI {
   result(s, level, best) {
     const win = s.outcome === "success",
       fly = s.outcome === "flyaway";
+    const winTitle = {
+      garage: "Garage departed.<br>Mostly intact.",
+      drag: "That was<br>unnecessary.",
+      ramp: "Against all<br>expectations.",
+      factory: "Five rings.<br>One whole car.",
+    }[level.id] || "Test complete.";
+    const finalTest = LEVELS.indexOf(level) === LEVELS.length - 1;
     this.modal(
-      `<p class="eyebrow">TEST ${level.number} / ${win ? "COMPLETE" : "UNSCHEDULED CONCLUSION"}</p><h2 id="dialog-title">${win ? ["Garage departed.\nMostly intact.", "That was\nunnecessary.", "Against all\nexpectations."][LEVELS.indexOf(level)].replace("\n", "<br>") : fly ? "We have lost<br>the vehicle." : s.damage >= 95 ? "Rapid unscheduled<br>disassembly." : "A bold interpretation<br>of landing."}</h2><p class="dialog-intro">${win ? (level.id === "ramp" ? "You made gravity look optional." : "The test engineers are cautiously impressed.") : fly ? "The warranty does not cover low Earth orbit." : "The data is invaluable. The car, less so."}</p><div class="result-stats"><div><b>${s.time.toFixed(2)}<small>s</small></b><p>TEST TIME</p></div><div><b>${Math.round(s.maxSpeed * 3.6)}<small>km/h</small></b><p>TOP SPEED</p></div><div><b>${s.maxAltitude.toFixed(1)}<small>m</small></b><p>MAX ALTITUDE</p></div></div>${best ? `<p class="record">PERSONAL BEST · ${best.toFixed(2)}s</p>` : ""}<div class="dialog-buttons"><button class="primary-button wide" data-action="${win ? "next" : "reset"}">${win ? (level.id === "ramp" ? "Back to hangar" : "Next test") : "Try that again"} ${svg("arrow")}</button><button class="secondary-button" data-action="${win ? "reset" : "home"}">${win ? "Replay test" : "Return to hangar"}</button></div>`,
+      `<p class="eyebrow">TEST ${level.number} / ${win ? "COMPLETE" : "UNSCHEDULED CONCLUSION"}</p><h2 id="dialog-title">${win ? winTitle : fly ? "We have lost<br>the vehicle." : s.damage >= 95 ? "Rapid unscheduled<br>disassembly." : "A bold interpretation<br>of landing."}</h2><p class="dialog-intro">${win ? (level.id === "factory" ? "Flight certification: surprisingly plausible." : level.id === "ramp" ? "You made gravity look optional." : "The test engineers are cautiously impressed.") : fly ? "The warranty does not cover low Earth orbit." : "The data is invaluable. The car, less so."}</p><div class="result-stats"><div><b>${s.time.toFixed(2)}<small>s</small></b><p>TEST TIME</p></div><div><b>${Math.round(s.maxSpeed * 3.6)}<small>km/h</small></b><p>TOP SPEED</p></div><div><b>${level.id === "factory" ? `${s.ringCount || 0}<small>/ ${s.ringGoal || 5}</small>` : `${s.maxAltitude.toFixed(1)}<small>m</small>`}</b><p>${level.id === "factory" ? "RINGS CLEARED" : "MAX ALTITUDE"}</p></div></div>${best ? `<p class="record">PERSONAL BEST · ${best.toFixed(2)}s</p>` : ""}<div class="dialog-buttons"><button class="primary-button wide" data-action="${win ? "next" : "reset"}">${win ? (finalTest ? "Back to hangar" : "Next test") : "Try that again"} ${svg("arrow")}</button><button class="secondary-button" data-action="${win ? "reset" : "home"}">${win ? "Replay test" : "Return to hangar"}</button></div>`,
       "result",
     );
   }

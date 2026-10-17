@@ -92,10 +92,12 @@ test("changing levels removes previous colliders and props", () => {
   assert.ok(game.body.position.z > 2, "ramp approach drives automatically");
 });
 
-test("the complete curved ramp can be cleared and landed using the player jet controls", () => {
+test("the complete curved ramp can be flipped and landed near-level without a last-second hover", () => {
   const game = new PhysicsGame();
   game.setLevel("ramp");
   const { radius, entryZ, width, thickness, segments } = RAMP;
+  game.addBox({ position: [0, -0.5, 25], size: [230, 1, 300] });
+  game.addBox({ position: [0, -0.11, 6], size: [width, 0.22, 72] });
   for (let i = 0; i < segments; i++) {
     const angle = ((i + 0.5) * Math.PI) / segments;
     game.addBox({
@@ -119,12 +121,10 @@ test("the complete curved ramp can be cleared and landed using the player jet co
       launchTime = game.time;
     if (launchTime !== null) {
       const t = game.time - launchTime;
-      // Continue the flip, counter its momentum, then pulse all jets low enough
-      // to cushion the landing without climbing away from the runway again.
+      // Continue the flip and counter its momentum. A player who rights the
+      // chassis should be able to let go and stick the normal ramp descent.
       if (t < 0.85) input = { q: 1, w: 1 };
       else if (t < 1.35) input = { o: 1, p: 1 };
-      else if (game.state.altitude < 8 && game.body.velocity.y < -4.5)
-        input = { q: 1, w: 1, o: 1, p: 1 };
     }
     game.step(1 / 120, input);
     if (game.state.outcome) break;
@@ -133,6 +133,7 @@ test("the complete curved ramp can be cleared and landed using the player jet co
   assert.ok(game.state.maxAltitude > 22);
   assert.equal(game.state.outcome, "success");
   assert.ok(game.state.damage < 10, `landing damage ${game.state.damage}`);
+  assert.equal(game._landingCaught, true, "landing struts should catch the normal ramp return");
 });
 
 test("car transfers collision momentum to loose garage clutter", () => {

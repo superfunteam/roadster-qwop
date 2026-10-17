@@ -97,7 +97,7 @@ test.describe("high-DPR mobile graphics", () => {
     await openGame(page);
     for (const value of ["high", "balanced", "low"]) {
       await quality(page, value);
-      for (const level of [0, 1, 2]) {
+      for (const level of [0, 1, 2, 3]) {
         await page.evaluate((level) => window.__roadster.startLevel(level), level);
         const state = await snapshot(page);
         expect(state.graphics.mobile).toBe(true);
@@ -144,7 +144,7 @@ test.describe("high-DPR mobile graphics", () => {
     expect(initial.antialias).toBe(false);
     expect(initial.reflection).toBeNull();
     expect(initial.graphics.shadows).toBe(false);
-    for (const level of [0, 1, 2]) {
+    for (const level of [0, 1, 2, 3]) {
       await page.evaluate((level) => window.__roadster.startLevel(level), level);
       const state = await snapshot(page);
       expect(state.graphics.quality).toBe("high");
@@ -220,7 +220,7 @@ test.describe("high-DPR mobile graphics", () => {
     for (let cycle = 0; cycle < 3; cycle++) {
       for (const value of ["low", "balanced", "high"]) {
         await quality(page, value);
-        for (const level of [0, 1, 2]) {
+        for (const level of [0, 1, 2, 3]) {
           await page.evaluate((level) => window.__roadster.startLevel(level), level);
           await settle(page);
         }

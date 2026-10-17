@@ -238,7 +238,7 @@ export class GameAudio {
     this.reset();
     this.runActive = true;
     const id = typeof level === "string" ? level : level?.id;
-    this.setScene(id === "ramp" ? "ramp" : id === "drag" ? "drag" : "garage");
+    this.setScene(id === "ramp" || id === "factory" ? "ramp" : id === "drag" ? "drag" : "garage");
     // Repeated retries should not repeat the same introduction every time.
     const now = this.ctx?.currentTime ?? 0;
     if (now - this.lastMissionStart > 20) {
@@ -675,6 +675,25 @@ export class GameAudio {
         loop?.gain.gain.setTargetAtTime(0, t, 0.02);
     }
     this.setPaused(false);
+  }
+
+  ringPass(count) {
+    if (!this.ctx || this.paused) return;
+    const c = this.ctx;
+    const base = 523.25 * 2 ** ((Math.min(5, count) - 1) / 12);
+    [base, base * 1.5].forEach((frequency, i) => {
+      const source = c.createOscillator(), gain = c.createGain();
+      const start = c.currentTime + i * 0.075;
+      source.frequency.value = frequency;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.075, start + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.28);
+      source.connect(gain);
+      gain.connect(this.sfxBus);
+      this._track(source, [gain]);
+      source.start(start);
+      source.stop(start + 0.3);
+    });
   }
 
   chime() {

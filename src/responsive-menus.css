@@ -97,7 +97,7 @@ html:not([data-player="true"]) .result-stats > div {
 }
 
 /* Tablet portrait uses the same intentional vertical composition as a phone:
-   title, unobstructed car, three tests, then the launch action. */
+   title, unobstructed car, four tests, then the launch action. */
 @media (max-width: 1024px) and (orientation: portrait) {
   html:not([data-player="true"]) .program,
   html:not([data-player="true"]) .spec-rail,

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { FACTORY_RINGS } from "./flight-course.js";
 
 // All dimensions are metres. The track and its collision surfaces share one path.
 export const RAMP = {
@@ -16,6 +17,7 @@ export function buildEnvironment(level, scene, physics) {
       0: "garage",
       1: "drag",
       2: "ramp",
+      3: "factory",
       dragstrip: "drag",
       strip: "drag",
       loop: "ramp",
@@ -25,6 +27,8 @@ export function buildEnvironment(level, scene, physics) {
   scene.add(group);
   const props = [];
   const animations = [];
+  const animatedRoots = new Set();
+  const rings = [];
   const textures = new Set();
   const geometries = new Set();
   const materials = new Set();
@@ -277,7 +281,7 @@ export function buildEnvironment(level, scene, physics) {
     sun.shadow.radius = 3;
     group.add(sun);
     group.add(sun.target);
-    if (id === "drag") {
+    if (id === "drag" || id === "factory") {
       animations.push(() => {
         const car = physics?.carBody || physics?.body;
         const p =
@@ -1095,6 +1099,237 @@ export function buildEnvironment(level, scene, physics) {
     }
     goal = { position: [0, 0.73, 402], radius: 7, heading: 0 };
     distantHills(false);
+  } else if (id === "factory") {
+    lighting = lights(false);
+    scene.background = new THREE.Color("#263744");
+    scene.fog = new THREE.Fog("#263744", 165, 420);
+    lighting.hemi.color.set("#b5d8ee");
+    lighting.hemi.groundColor.set("#46505b");
+    lighting.hemi.intensity = 2.25;
+    lighting.sun.color.set("#d4eaff");
+    lighting.sun.intensity = 2.8;
+    const floor = material("#c5ccd0", 0.88, 0.09, {
+      map: surfaceTexture("#697783", 10, [25, 45], true),
+    });
+    const shell = material("#76828d", 0.74, 0.2);
+    const steel = material("#35434e", 0.52, 0.6);
+    const paleSteel = material("#a3b0b8", 0.5, 0.45);
+    const yellow = material("#e5b83f", 0.64, 0.08);
+    const robotRed = material("#e43631", 0.43, 0.35);
+    const cyan = new THREE.MeshBasicMaterial({ color: "#60e5ff", toneMapped: false });
+    const stripLight = new THREE.MeshBasicMaterial({ color: "#d4edfa", toneMapped: false });
+    materials.add(cyan);
+    materials.add(stripLight);
+
+    // A real, enclosed flight hall. Only the perimeter contains machinery: the
+    // wide central bay gives a tumbling Roadster room to recover between gates.
+    const hall = { minX: -100, maxX: 100, minZ: -30, maxZ: 330, height: 60 };
+    const centerZ = (hall.minZ + hall.maxZ) / 2;
+    const length = hall.maxZ - hall.minZ;
+    const width = hall.maxX - hall.minX;
+    box([width, 1, length], [0, -0.5, centerZ], floor, { collider: true, cast: false });
+    for (const x of [hall.minX, hall.maxX]) {
+      box([1, hall.height, length], [x, hall.height / 2, centerZ], shell, {
+        collider: true, cast: false, label: "factory wall",
+      });
+      box([0.12, 2.2, length], [x - Math.sign(x) * 0.56, 1.1, centerZ], steel, { cast: false });
+      box([0.15, 0.2, length], [x - Math.sign(x) * 0.6, 2.4, centerZ], yellow, { cast: false });
+      for (let z = hall.minZ + 12; z < hall.maxZ; z += 24) {
+        box([1.4, 58, 1.3], [x - Math.sign(x) * 1.1, 29, z], steel, { cast: false });
+        // High clerestory panels read as daylight without expensive local lights.
+        box([0.2, 10, 19], [x - Math.sign(x) * 0.7, 45, z], stripLight, { cast: false });
+        box([0.25, 10.4, 0.22], [x - Math.sign(x) * 0.85, 45, z], paleSteel, { cast: false });
+      }
+    }
+    for (const z of [hall.minZ, hall.maxZ]) {
+      box([width, hall.height, 1], [0, hall.height / 2, z], shell, {
+        collider: true, cast: false, label: "factory wall",
+      });
+      box([width, 2.2, 0.12], [0, 1.1, z + (z < 0 ? 0.6 : -0.6)], steel, { cast: false });
+      for (const x of [-72, -36, 36, 72]) {
+        box([22, 16, 0.25], [x, 8, z + (z < 0 ? 0.65 : -0.65)], steel, { cast: false });
+        for (let y = 1; y < 16; y += 1.7)
+          box([21.6, 0.06, 0.1], [x, y, z + (z < 0 ? 0.82 : -0.82)], paleSteel, { cast: false });
+      }
+    }
+    box([width, 0.8, length], [0, hall.height, centerZ], steel, {
+      collider: true, cast: false, label: "factory roof",
+    });
+    for (let z = hall.minZ + 12; z < hall.maxZ; z += 24) {
+      box([width, 0.7, 0.65], [0, 56, z], paleSteel, { cast: false });
+      box([width, 0.7, 0.65], [0, 59, z], paleSteel, { cast: false });
+      for (let x = hall.minX; x < hall.maxX; x += 12)
+        beam([x, 56, z], [x + 12, 59, z], 0.17, steel).castShadow = false;
+      for (const x of [-66, -32, 0, 32, 66])
+        box([1.2, 0.05, 15], [x, 55.5, z], stripLight, { cast: false });
+    }
+
+    // Tesla's production architecture: parallel assembly lines, orange-red
+    // industrial arms, battery storage racks and yellow overhead gantry cranes.
+    for (const side of [-1, 1]) {
+      const x = side * 78;
+      box([17, 0.55, 265], [x, 0.275, 154], steel, { collider: true, label: "assembly line" });
+      for (const offset of [-7.1, 7.1])
+        box([0.16, 0.6, 265], [x + offset, 0.82, 154], yellow);
+      for (let z = 24; z < 285; z += 22) {
+        box([6.6, 2.4, 6.2], [x, 1.75, z], paleSteel, { collider: true, label: "battery station" });
+        box([6.1, 0.15, 5.8], [x, 3.02, z], standard.darkMetal);
+        box([2.4, 0.16, 3.7], [x, 3.15, z], standard.red);
+        for (const offset of [-5.4, 5.4]) {
+          const armX = x + offset;
+          cylinder(1.1, 1.2, [armX, 1.2, z], steel, { segments: 10 });
+          beam([armX, 1.5, z], [armX - side * 1.8, 5.6, z + 0.5], 0.62, robotRed);
+          beam([armX - side * 1.8, 5.6, z + 0.5], [armX - side * 3, 4.6, z + 2.4], 0.46, robotRed);
+          cylinder(0.8, 1.25, [armX - side * 1.8, 5.6, z + 0.5], steel, {
+            rotation: [Math.PI / 2, 0, 0], segments: 10,
+          });
+          box([1, 0.9, 0.7], [armX - side * 3, 4.35, z + 2.4], standard.darkMetal);
+        }
+      }
+      for (let z = 28; z < 300; z += 36) {
+        const shelfX = side * 94;
+        box([5, 15, 0.3], [shelfX, 7.5, z - 4.5], steel);
+        box([5, 15, 0.3], [shelfX, 7.5, z + 4.5], steel);
+        for (const y of [0.8, 5.3, 9.8]) {
+          box([5.5, 0.22, 9.3], [shelfX, y, z], yellow);
+          for (const zz of [-2.3, 2.3]) {
+            box([4.4, 3.6, 3.5], [shelfX, y + 1.95, z + zz], standard.white);
+            box([4.5, 0.18, 0.15], [shelfX, y + 1.6, z + zz + 1.8], steel);
+          }
+        }
+      }
+      box([0.28, 0.08, length - 20], [side * 59, 0.05, centerZ], yellow, { cast: false });
+      for (let z = 10; z < 310; z += 20)
+        box([7, 0.025, 0.35], [side * 63, 0.035, z], yellow, { cast: false, rotation: [0, side * 0.55, 0] });
+    }
+    for (const z of [52, 172, 292]) {
+      for (const x of [-61, 61]) {
+        box([1.4, 47, 1.5], [x, 23.5, z], yellow, { collider: true, label: "gantry column" });
+        box([3.4, 0.5, 3.4], [x, 0.25, z], steel);
+      }
+      box([124, 2.1, 2.6], [0, 47, z], yellow);
+      box([123, 0.2, 2.7], [0, 48.15, z], standard.darkMetal);
+      box([8, 1.8, 4.5], [38, 45.5, z], steel);
+      beam([38, 45, z], [38, 40, z], 0.085, standard.metal);
+      cylinder(0.55, 0.9, [38, 39.5, z], yellow, { segments: 10 });
+    }
+
+    // A clean launch apron and visual depth cues on the floor help judge height.
+    for (const x of [-18, 18])
+      box([0.15, 0.035, 270], [x, 0.025, 125], cyan, { cast: false });
+    for (let z = -10; z < 280; z += 12)
+      box([0.22, 0.025, 4], [0, 0.025, z], standard.line, { cast: false });
+    for (let z = 40; z <= 280; z += 40) {
+      box([35.8, 0.02, 0.1], [0, 0.035, z], paleSteel, { cast: false });
+      groundMark(`${z} M`, [-23, 0.045, z], 4, 1.7, "#a6bcc9");
+    }
+    groundMark("FLIGHT TEST 04", [0, 0.045, -11], 17, 2.1, "#d4edf7");
+    label("G I G A F A C T O R Y", 64, 6.4, {
+      position: [0, 32, hall.maxZ - 0.6], rotation: [0, Math.PI, 0],
+      color: "#e4eef4", spacing: 16, weight: 500,
+    });
+    label("TESLA  /  ADVANCED FLIGHT SYSTEMS", 49, 2.4, {
+      position: [0, 25.8, hall.maxZ - 0.62], rotation: [0, Math.PI, 0],
+      color: "#73dcef", spacing: 10,
+    });
+    label("FLY FIVE. STAY IN ONE PIECE.", 37, 2.2, {
+      position: [0, 19, hall.maxZ - 0.64], rotation: [0, Math.PI, 0],
+      color: "#afc0cb", spacing: 7,
+    });
+
+    // Shared atlases keep all ten markers inexpensive. The halo is baked into a
+    // transparent texture so rings still glow in the mobile direct-render path.
+    const haloTexture = texture(256, (ctx, size) => {
+      const center = size / 2;
+      const gradient = ctx.createRadialGradient(center, center, 0, center, center, center);
+      gradient.addColorStop(0, "rgba(255,255,255,0)");
+      gradient.addColorStop(0.68, "rgba(255,255,255,0)");
+      gradient.addColorStop(0.75, "rgba(255,255,255,.12)");
+      gradient.addColorStop(0.79, "rgba(255,255,255,.8)");
+      gradient.addColorStop(0.82, "rgba(255,255,255,.18)");
+      gradient.addColorStop(0.94, "rgba(255,255,255,0)");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+    });
+    const numberAtlas = texture(512, (ctx, size) => {
+      const cell = size / 4;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "500 72px Arial, sans-serif";
+      for (let i = 0; i < 10; i++)
+        ctx.fillText(String(i + 1).padStart(2, "0"), (i % 4 + 0.5) * cell, (Math.floor(i / 4) + 0.5) * cell);
+      ctx.font = "600 80px Arial, sans-serif";
+      ctx.fillText("✓", 2.5 * cell, 2.5 * cell);
+    });
+    function atlasCell(geometry, cell) {
+      const uv = geometry.attributes.uv;
+      const x = cell % 4;
+      const y = Math.floor(cell / 4);
+      uv.setXY(0, x / 4, 1 - y / 4);
+      uv.setXY(1, (x + 1) / 4, 1 - y / 4);
+      uv.setXY(2, x / 4, 1 - (y + 1) / 4);
+      uv.setXY(3, (x + 1) / 4, 1 - (y + 1) / 4);
+      uv.needsUpdate = true;
+    }
+    const updateRings = [];
+    for (let index = 0; index < FACTORY_RINGS.length; index++) {
+      const ring = FACTORY_RINGS[index];
+      const root = new THREE.Group();
+      root.name = `Flight ring ${index + 1}`;
+      root.position.set(...ring.position);
+      root.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(...ring.normal));
+      group.add(root);
+      animatedRoots.add(root);
+      const color = index < 5 ? "#64e7ff" : "#ffd486";
+      const rimMaterial = new THREE.MeshBasicMaterial({ color, toneMapped: false });
+      const haloMaterial = new THREE.MeshBasicMaterial({
+        color, map: haloTexture, transparent: true, opacity: 0.54,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+        side: THREE.DoubleSide, toneMapped: false,
+      });
+      const numberMaterial = new THREE.MeshBasicMaterial({
+        map: numberAtlas, color, transparent: true, depthWrite: false,
+        side: THREE.DoubleSide, toneMapped: false,
+      });
+      materials.add(rimMaterial);
+      materials.add(haloMaterial);
+      materials.add(numberMaterial);
+      const rim = mesh(new THREE.TorusGeometry(ring.radius, 0.13, 6, 64), rimMaterial, [0, 0, 0], [0, 0, 0], root, false);
+      const halo = mesh(new THREE.PlaneGeometry(ring.radius * 2.5, ring.radius * 2.5), haloMaterial, [0, 0, 0], [0, 0, 0], root, false);
+      // Four short brackets establish the ring plane without filling its opening.
+      for (let i = 0; i < 4; i++) {
+        const angle = i * Math.PI / 2;
+        const x = Math.sin(angle) * (ring.radius + 0.35);
+        const y = Math.cos(angle) * (ring.radius + 0.35);
+        box([0.4, 0.8, 0.25], [x, y, 0], paleSteel, { parent: root, cast: false, rotation: [0, 0, -angle] });
+      }
+      const number = mesh(new THREE.PlaneGeometry(2.3, 2.3), numberMaterial, [0, ring.radius + 2, 0], [0, Math.PI, 0], root, false);
+      atlasCell(number.geometry, index);
+      const entry = { ...ring, root, rim, halo, number, collected: false };
+      rings.push(entry);
+      updateRings.push((passed, time) => {
+        if (passed !== entry.collected) {
+          entry.collected = passed;
+          rimMaterial.color.set(passed ? "#68e9a3" : color);
+          haloMaterial.color.copy(rimMaterial.color);
+          numberMaterial.color.copy(rimMaterial.color);
+          atlasCell(number.geometry, passed ? 10 : index);
+        }
+        haloMaterial.opacity = passed ? 0.17 : 0.42 + Math.sin(time * 2 + index * 0.7) * 0.08;
+        rimMaterial.color.set(passed ? "#3c9568" : color);
+      });
+    }
+    animations.push((dt, time) => {
+      const collected = physics?.state?.collectedRings || [];
+      for (let index = 0; index < rings.length; index++) {
+        const passed = typeof collected.has === "function"
+          ? collected.has(rings[index].id)
+          : collected.includes(rings[index].id);
+        updateRings[index](passed, time);
+      }
+    });
+    goal = { position: FACTORY_RINGS[4].position, radius: FACTORY_RINGS[4].radius, heading: 0 };
   } else {
     lighting = lights(true);
     box(
@@ -1385,7 +1620,7 @@ export function buildEnvironment(level, scene, physics) {
       parent && parent !== group;
       parent = parent.parent
     )
-      if (dynamicRoots.has(parent)) return;
+      if (dynamicRoots.has(parent) || animatedRoots.has(parent)) return;
     const key = `${object.material.uuid}:${object.castShadow}`;
     if (!batches.has(key)) batches.set(key, []);
     batches.get(key).push(object);
@@ -1419,6 +1654,7 @@ export function buildEnvironment(level, scene, physics) {
     id,
     group,
     props,
+    rings,
     spawn,
     goal,
     lighting,

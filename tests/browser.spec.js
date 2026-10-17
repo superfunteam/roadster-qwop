@@ -65,7 +65,7 @@ test("first-run manual, pause, return to hangar, and saved preferences", async (
 }) => {
   await openGame(page, { manualSeen: false });
   await expect(page).toHaveTitle(/Roadster.*But Can It Fly/);
-  await expect(page.locator(".mission")).toHaveCount(3);
+  await expect(page.locator(".mission")).toHaveCount(4);
   await page.getByRole("button", { name: "Begin test" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(
@@ -191,7 +191,7 @@ test("R restarts while paused and Escape closes settings from a focused select",
   await expect(page.getByRole("dialog")).not.toBeVisible();
 });
 
-test("all three level selections start and the inversion drives itself", async ({
+test("all four level selections start, inversion autodrives, and factory counts rings", async ({
   page,
 }) => {
   await openGame(page);
@@ -199,6 +199,7 @@ test("all three level selections start and the inversion drives itself", async (
     [0, "garage", "The garage"],
     [1, "drag", "The quarter mile"],
     [2, "ramp", "The inversion"],
+    [3, "factory", "The Gigafactory"],
   ]) {
     await startLevel(page, index);
     await expect(page.locator("#hud-level-name")).toHaveText(name);
@@ -214,6 +215,14 @@ test("all three level selections start and the inversion drives itself", async (
         await page.evaluate(() => window.__roadster.input.state.throttle),
       ).toBe(0);
     }
+    if (id === "factory") {
+      await expect(page.locator("#ring-objective")).toBeVisible();
+      await expect(page.locator("#ring-count")).toHaveText("0 / 5");
+      expect(await page.evaluate(() => ({
+        goal: window.__roadster.physics.state.ringGoal,
+        total: window.__roadster.physics.state.ringTotal,
+      }))).toEqual({ goal: 5, total: 10 });
+    } else await expect(page.locator("#ring-objective")).toBeHidden();
     await returnToHangar(page);
   }
 });

@@ -125,6 +125,7 @@ test("production assets, install metadata, and the playable game survive an offl
   for (const [id, index, name] of [
     ["drag", 1, "The quarter mile"],
     ["ramp", 2, "The inversion"],
+    ["factory", 3, "The Gigafactory"],
   ]) {
     await page.goto(`/?test=${id}`);
     await expect(page.locator(`[data-level="${index}"]`)).toHaveAttribute(

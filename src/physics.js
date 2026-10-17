@@ -1,4 +1,5 @@
 import * as CANNON from "cannon-es";
+import { FACTORY_RINGS, FACTORY_RING_GOAL, FACTORY_BOUNDS } from "./flight-course.js";
 
 // Metres, seconds, kilograms. +Z is the nose of the car; +Y is up.
 export const PHYSICS = Object.freeze({
@@ -116,11 +117,13 @@ export class PhysicsGame {
     this._normal = new CANNON.Vec3();
     this._localForce = new CANNON.Vec3();
     this._contactLocal = new CANNON.Vec3();
+    this._flightPrevious = new CANNON.Vec3();
+    this._landingRay = new CANNON.RaycastResult();
     this.setLevel("garage");
   }
 
   setLevel(id) {
-    if (!["garage", "drag", "ramp"].includes(id))
+    if (!["garage", "drag", "ramp", "factory"].includes(id))
       throw new Error(`Unknown driving level: ${id}`);
     for (const body of this.levelBodies) this.world.removeBody(body);
     this.levelBodies = [];
@@ -220,6 +223,9 @@ export class PhysicsGame {
     this._hasClimbed = false;
     this._rampLaunched = false;
     this._landingTime = 0;
+    this._landingCaught = false;
+    this._collectedRings = new Set();
+    this.collectedRings = [];
     this.rampStage = "approach";
     this.outcome = null;
     this.crashed = false;
@@ -236,6 +242,7 @@ export class PhysicsGame {
     const previousOutcome = this.outcome;
     this._accumulator += Math.min(dt, 0.1);
     while (this._accumulator + 1e-10 >= PHYSICS.fixedStep) {
+      this._flightPrevious.copy(this.body.position);
       this._integrate(PHYSICS.fixedStep, input);
       this.world.step(PHYSICS.fixedStep);
       this._afterStep(PHYSICS.fixedStep);
@@ -294,6 +301,7 @@ export class PhysicsGame {
       throttle = Math.max(throttle, clamp((28 - signedSpeed) * 0.34, 0, 1));
     }
     this._steering += (steer - this._steering) * (1 - Math.exp(-dt * 8));
+    this._catchRampLanding();
     this._suspensionAndTires(dt, throttle, brake, signedSpeed);
 
     let requested = 0;
@@ -347,6 +355,77 @@ export class PhysicsGame {
     const angularSpeed = this.body.angularVelocity.length();
     this.body.angularVelocity.scale(-PHYSICS.angularDrag * angularSpeed, this._force);
     this.body.torque.vadd(this._force, this.body.torque);
+  }
+
+  _catchRampLanding() {
+    // A successful inversion is about bringing the wheels back underneath the
+    // car. Give its landing struts enough travel to catch the normal 24 m drop,
+    // while preserving the player's approach speed and chosen attitude.
+    const position = this.body.position;
+    if (
+      this.level !== "ramp" || !this._hasClimbed || !this._rampLaunched ||
+      this._landingCaught || this.outcome || this.damage >= 90 ||
+      this._up.y < Math.cos(Math.PI / 6) ||
+      this.body.angularVelocity.length() > 2.5 ||
+      this.body.velocity.y >= -4.5 || this.body.velocity.y < -32 ||
+      Math.abs(position.x) >= 14 || position.z <= -25 || position.z >= 40
+    ) return;
+
+    let supportedWheels = 0;
+    for (let i = 0; i < WHEELS.length; i++) {
+      if (this.missingWheels[i]) continue;
+      this.body.pointToWorldFrame(WHEELS[i], this._mount);
+      this._up.scale(-1.02, this._end);
+      this._mount.vadd(this._end, this._end);
+      this._landingRay.reset();
+      this.world.raycastClosest(this._mount, this._end, {
+        collisionFilterMask: 1,
+        collisionFilterGroup: 2,
+        skipBackfaces: true,
+      }, this._landingRay);
+      // The visible runway and concrete apron also have box colliders, flush
+      // with the infinite floor. A ray may hit any of these co-planar surfaces.
+      if (
+        this._landingRay.body?.type === CANNON.Body.STATIC &&
+        this._landingRay.hitNormalWorld.y > 0.98 &&
+        Math.abs(this._landingRay.hitPointWorld.y) < 0.08
+      ) {
+        supportedWheels++;
+      }
+    }
+    if (supportedWheels < 2) return;
+    this._landingCaught = true;
+    this.body.velocity.y = -3.2;
+  }
+
+  _collectFlightRings() {
+    if (this.outcome || this.crashed || this.exploded || this.damage >= 100 || this.contactCount) return;
+    const from = this._flightPrevious;
+    const to = this.body.position;
+    for (const ring of FACTORY_RINGS) {
+      if (this._collectedRings.has(ring.id)) continue;
+      const [cx, cy, cz] = ring.position;
+      const [nx, ny, nz] = ring.normal;
+      const before = (from.x - cx) * nx + (from.y - cy) * ny + (from.z - cz) * nz;
+      const after = (to.x - cx) * nx + (to.y - cy) * ny + (to.z - cz) * nz;
+      // A near miss or simply hovering inside the glow is not a passage. The
+      // swept test also catches a ring crossed entirely between rendered frames.
+      if (before === after || before * after > 0 || before === 0) continue;
+      const t = before / (before - after);
+      const x = from.x + (to.x - from.x) * t - cx;
+      const y = from.y + (to.y - from.y) * t - cy;
+      const z = from.z + (to.z - from.z) * t - cz;
+      const normalDistance = x * nx + y * ny + z * nz;
+      const radialSquared = x * x + y * y + z * z - normalDistance * normalDistance;
+      const clearance = Math.max(0, ring.radius - 1.2);
+      if (radialSquared > clearance * clearance || from.y + (to.y - from.y) * t < 2) continue;
+      this._collectedRings.add(ring.id);
+      this.collectedRings = [...this._collectedRings];
+      if (this._collectedRings.size >= FACTORY_RING_GOAL) {
+        this.outcome = "success";
+        break;
+      }
+    }
   }
 
   _suspensionAndTires(dt, throttle, brake, signedSpeed) {
@@ -610,6 +689,7 @@ export class PhysicsGame {
       // Raycasts see the floor before a high-speed chassis impact. Require the
       // suspension to catch and hold a survivable landing before awarding it.
       const settledLanding =
+        this._hasClimbed &&
         this._rampLaunched &&
         position.y < 1.25 &&
         this.contactCount >= 2 &&
@@ -625,6 +705,8 @@ export class PhysicsGame {
         this.outcome = "success";
         this.rampStage = "landed";
       }
+    } else if (this.level === "factory") {
+      this._collectFlightRings();
     } else if (
       this.level === "garage" &&
       position.z > 24 &&
@@ -643,12 +725,12 @@ export class PhysicsGame {
       this.crashed = true;
       this.outcome ||= "wrecked";
     }
-    if (
-      position.y > 110 ||
-      Math.abs(position.x) > 180 ||
-      position.y < -12 ||
-      position.z < -160
-    ) {
+    const outside = this.level === "factory"
+      ? position.x < FACTORY_BOUNDS.minX || position.x > FACTORY_BOUNDS.maxX ||
+        position.y < FACTORY_BOUNDS.minY || position.y > FACTORY_BOUNDS.maxY ||
+        position.z < FACTORY_BOUNDS.minZ || position.z > FACTORY_BOUNDS.maxZ
+      : position.y > 110 || Math.abs(position.x) > 180 || position.y < -12 || position.z < -160;
+    if (outside) {
       this.outcome ||= "flyaway";
     }
     this._updateRecovery(dt);
@@ -716,6 +798,10 @@ export class PhysicsGame {
       exploded: this.exploded,
       outcome: this.outcome,
       rampStage: this.rampStage,
+      ringCount: this._collectedRings.size,
+      ringGoal: FACTORY_RING_GOAL,
+      ringTotal: FACTORY_RINGS.length,
+      collectedRings: this.collectedRings,
       flipAngle: this.flipAngle,
       recoveryRemaining:
         this._strandedTime >= PHYSICS.recoveryDelay - PHYSICS.recoveryNotice

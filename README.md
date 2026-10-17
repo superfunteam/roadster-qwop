@@ -1,6 +1,6 @@
 # ROADSTER — But can it fly?
 
-A browser-based 3D rocket-driving game. Four independently controlled thrusters, a heavy car, and three increasingly unreasonable flight tests.
+A browser-based 3D rocket-driving game. Four independently controlled thrusters, a heavy car, and four increasingly unreasonable flight tests.
 
 ## Run locally
 
@@ -43,9 +43,11 @@ Haptics use the Vibration API where supported; browsers without it remain fully 
 
 1. **The garage:** clear a home garage filled with 57 physical storage props. Racks, tools, cartons, a charger, and a bicycle frame the scene. Reach the driveway marker.
 2. **The quarter mile:** cover 402 metres of drag strip. Rear rockets dramatically shorten the run; vertical jets make it interesting.
-3. **The inversion:** autodrive approaches a 24-metre vertical return ramp. Ride the arc inverted, use short front and rear pulses to rotate, then cushion the landing. Completion requires actual upper-ramp contact and a stable, survivable touchdown.
+3. **The inversion:** autodrive approaches a 24-metre vertical return ramp. Ride the arc inverted, use short front and rear pulses to rotate, then stick a near-level landing. After actual upper-ramp contact, the suspension catches a controlled, nearly upright return from the ramp; nose-first, roof-first and wall impacts still cause damage.
 
-For the ramp, a useful starting technique is a roughly 0.8-second Q+W burst when leaving the lip, a half-second O+P correction, then short bursts of all four as you descend through the last eight metres to soften the landing. It is intentionally possible to spin, wreck, or fly out of the test area.
+4. **The Gigafactory:** a huge indoor flight hall with ten glowing, numbered rings. Fly through any five different rings without wrecking to win. Rings work in either direction; hovering beside one, revisiting it, or driving under it does not count. The first five form a gentle central route; the outer gates reward more adventurous flying. Collected rings turn green and reset with the run.
+
+For the ramp, a useful starting technique is a roughly 0.8-second Q+W burst when leaving the lip, a half-second O+P correction, then release and aim for a near-level touchdown. It is intentionally possible to spin, wreck, or fly out of the test area.
 
 Impacts crumple the body near the contact point, crack the glass, and tear loose bodywork. Collision damage depends on the closing speed and the mass of the obstacle: cartons yield, concrete does not. Detached wheels lose their suspension and grip. A critically damaged car smokes and burns. Totaling it cuts the motors and thrusters and triggers an explosion with detached panels and wheels, physical debris, a shockwave that throws nearby clutter, sparks, fire, smoke, a deep blast, and camera shake. The wreck keeps tumbling before the result screen appears. **R** restores the car and all props and clears the debris and fire.
 
@@ -94,13 +96,13 @@ npm run build
 npm run preview
 ```
 
-The Node suite covers suspension equilibrium, symmetric lift, asymmetric torque, frame-rate invariance, prop momentum transfer, complete ramp landings, lethal-landing rejection, ramp bypass prevention, quarter-mile completion, reset, flyaways and long mixed-input stability. Destruction checks cover mass-weighted collisions, local deformation, fracture stages, detached part transforms and resource isolation, missing-wheel handling, explosion impulses, fresh-debris collision grace and exact repeated model restoration.
+The Node suite covers suspension equilibrium, symmetric lift, asymmetric torque, frame-rate invariance, prop momentum transfer, complete ramp landings, lethal-landing rejection, ramp bypass prevention, quarter-mile completion, swept ring crossings, unique gate scoring, complete factory flights, reset, flyaways and long mixed-input stability. Destruction checks cover mass-weighted collisions, local deformation, fracture stages, detached part transforms and resource isolation, missing-wheel handling, explosion impulses, fresh-debris collision grace and exact repeated model restoration.
 
 Browser tests cover menus, first-run instructions, actual keyboard input, pause/reset, touch controls, collision-triggered destruction and settings. They verify moderate dents, fatal impacts, physical part detachment, one-shot blasts, paused effects and two complete wreck/reset cycles. On macOS they can use installed Chrome; otherwise install Playwright Chromium with `npx playwright install chromium`. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to use another Chromium binary. The separate production offline check runs against a built preview: `PWA_TEST_URL=http://localhost:4173 npm run test:pwa`.
 
 Flight checks cover sustained roof-contact recovery across all levels, cancellation on movement or righting, pause/resume, key-repeat release latching, and airborne inversions that must remain controllable. Numerical checks also cover rear acceleration, rear-to-front booster transitions, takeoff clearance, angular momentum, and complete ramp landings.
 
-Touch-control checks cover simultaneous analog driving and lift, sliding between paired and individual jets, duplicate holds, release/cancel/reset/rotation, and keyboard/touch switching. Responsive checks cover small phones, landscape phones, tablets, and desktop layouts, including level selection, minimum touch targets, real finger scrolling, saved preferences, result actions, first-run instructions, and mid-flight rotation. Layouts and all three level launches have also been exercised in WebKit with mobile emulation; notch and home-indicator insets were checked through Chrome’s safe-area emulation.
+Touch-control checks cover simultaneous analog driving and lift, sliding between paired and individual jets, duplicate holds, release/cancel/reset/rotation, and keyboard/touch switching. Responsive checks cover small phones, landscape phones, tablets, and desktop layouts, including level selection, minimum touch targets, real finger scrolling, saved preferences, result actions, first-run instructions, and mid-flight rotation. The original three level launches have also been exercised in WebKit with mobile emulation; notch and home-indicator insets were checked through Chrome’s safe-area emulation.
 
 Audio tests additionally decode every MP3, exercise delayed/failed downloads, saved music/voice preferences, master mute, scene music and stale-voice cancellation. `PWA_TEST_URL=http://localhost:4173 npm run test:audio` verifies the entire audio pack can be decoded offline.
 
@@ -131,7 +133,7 @@ No environment variables are needed. Build artifacts are ignored; push the sourc
 
 ## X Player Card
 
-Share **https://roadster.superfun.games/**. Its server-rendered tags request a 640 × 480 Player Card at **https://roadster.superfun.games/player/**, with the existing social artwork as its poster. The player is a separate Vite HTML entry using the same game code and all three levels. The full site keeps its Open Graph image, install support and normal layout.
+Share **https://roadster.superfun.games/**. Its server-rendered tags request a 640 × 480 Player Card at **https://roadster.superfun.games/player/**, with the existing social artwork as its poster. The player is a separate Vite HTML entry using the same game code and all four levels. The full site keeps its Open Graph image, install support and normal layout.
 
 The compact player keeps keyboard and simultaneous touch controls visible in a small frame, starts sound only after a gesture, pauses and releases held controls on lost focus, and tolerates blocked storage. It skips install prompts and service-worker registration. An “Open full game” link opens a new tab. On a top-level portrait touch player, the bottom 30% is reserved for the mobile overlay described in the supplied reference; an actual iframe uses its entire allocated height. This reserve is a compatibility heuristic, not a detected X API value.
 
@@ -143,7 +145,7 @@ The [official Player Card sample](https://github.com/xdevplatform/cards-player-s
 
 ## Install and offline play
 
-The install button supports the native install prompt and gives platform-specific instructions when needed. The manifest includes standalone display, maskable icons, Apple touch artwork and shortcuts for the three tests.
+The install button supports the native install prompt and gives platform-specific instructions when needed. The manifest includes standalone display, maskable icons, Apple touch artwork and shortcuts for the four tests.
 
 Each production build generates a content-versioned service worker with the exact emitted asset names. After one successful online load, the complete game is available offline. A new deployment creates a fresh cache. The service worker is disabled and old game caches are removed during development to avoid stale code.
 

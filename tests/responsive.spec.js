@@ -130,7 +130,7 @@ for (const [width, height] of sizes) {
         expect(box.visible, `${box.name}: visible heading`).toBe(true);
         expect(box.textFits, `${box.name}: no clipped heading`).toBe(true);
       }
-      for (const index of [0, 1, 2]) {
+      for (const index of [0, 1, 2, 3]) {
         await activate(page, page.locator(`[data-level="${index}"]`), touch);
         await expect(page.locator(`[data-level="${index}"]`)).toHaveAttribute("aria-pressed", "true");
       }
@@ -223,7 +223,7 @@ for (const [width, height] of [[320, 568], [568, 320], [768, 1024]]) {
   });
 }
 
-test("phone first-run manual, all three levels, results, and rotation remain operable", async ({ browser, baseURL }) => {
+test("phone first-run manual, all four levels, results, and rotation remain operable", async ({ browser, baseURL }) => {
   const { page, context, errors } = await openGame(browser, baseURL, 390, 844, { manualSeen: false });
   const session = await context.newCDPSession(page);
   try {
@@ -267,6 +267,13 @@ test("phone first-run manual, all three levels, results, and rotation remain ope
     await page.getByRole("button", { name: "Return to hangar", exact: true }).tap();
     await page.setViewportSize({ width: 390, height: 844 });
     await expectTappable(page, '#hangar [data-level], #hangar [data-action="start"]');
+    await start(page, 3);
+    await expect(page.locator("#hud-level-name")).toHaveText("The Gigafactory");
+    await expect(page.locator("#ring-count")).toHaveText("0 / 5");
+    await expectTappable(page, '#hud [data-control], #hud [data-touch-pad="drive"], #hud [data-jets], #hud [data-action]');
+    await page.getByRole("button", { name: "Pause game" }).tap();
+    await page.getByRole("button", { name: "Return to hangar", exact: true }).tap();
+    await expect(page.getByRole("button", { name: "Begin test" })).toBeVisible();
     expect(errors).toEqual([]);
   } finally {
     await context.close();

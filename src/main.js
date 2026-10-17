@@ -129,6 +129,7 @@ let outcomeAt = null,
   resultShown = false,
   firstStart = true,
   airMessage = false,
+  lastRingCount = 0,
   crashMessageAt = 0,
   wreckStarted = false,
   aftermathTime = 0;
@@ -395,6 +396,7 @@ function startLevel(index = selected) {
   finishState = null;
   resultShown = false;
   airMessage = false;
+  lastRingCount = 0;
   crashMessageAt = 0;
   followYaw = 0;
   shake = 0;
@@ -403,6 +405,8 @@ function startLevel(index = selected) {
   ui.message(
     index === 2
       ? "Autodrive engaged. You have the boosters."
+      : index === 3
+        ? "Ten rings. Fly through any five. Keep the car in one piece."
       : "Flight systems armed.",
   );
   updateCar(physics.state, 0);
@@ -436,6 +440,7 @@ function reset() {
   resultShown = false;
   paused = false;
   airMessage = false;
+  lastRingCount = 0;
   crashMessageAt = 0;
   shake = 0;
   impactFlash = 0;
@@ -592,7 +597,7 @@ function action(name, value) {
     return;
   }
   if (name === "next") {
-    if (selected === 2) {
+    if (selected >= LEVELS.length - 1) {
       home();
       return;
     }
@@ -620,6 +625,7 @@ function updateCamera(dt, snap = false) {
     viewport.width < 760 || matchMedia("(pointer: coarse)").matches;
   const portrait = viewport.height > viewport.width;
   const landscapePhone = mobile && !portrait && viewport.height < 520;
+  const isFactory = mode === "game" && LEVELS[selected].id === "factory";
   if (mode === "menu") {
     orbitIdle -= dt;
     if (!pointer.down && orbitIdle <= 0 && !reducedMotion)
@@ -655,7 +661,7 @@ function updateCamera(dt, snap = false) {
     viewport.width,
     viewport.height,
     0,
-    viewport.height * (landscapePhone ? 0.18 : portrait ? 0.12 : 0.055),
+    viewport.height * (isFactory ? (landscapePhone ? 0.08 : portrait ? 0.06 : 0.02) : landscapePhone ? 0.18 : portrait ? 0.12 : 0.055),
     viewport.width,
     viewport.height,
   );
@@ -687,10 +693,10 @@ function updateCamera(dt, snap = false) {
     vTarget.set(s.position.x, s.position.y + 1, s.position.z + 1.3);
   } else {
     const close = cameraMode === 2,
-      distance = close ? 5.8 : landscapePhone ? 8.8 : portrait ? 11.4 : 8.8;
+      distance = close ? 5.8 : isFactory ? (portrait ? 20 : 15) : landscapePhone ? 8.8 : portrait ? 11.4 : 8.8;
     const offset = new THREE.Vector3(
-      close ? 1.8 : 3.3,
-      close ? 2.3 : selected === 0 ? 3.3 : 3.6,
+      close ? 1.8 : isFactory ? 0.6 : 3.3,
+      close ? 2.3 : isFactory && portrait ? 5.5 : selected === 0 ? 3.3 : 3.6,
       -distance,
     ).applyAxisAngle(THREE.Object3D.DEFAULT_UP, followYaw);
     vCamera.copy(vPosition).add(offset);
@@ -698,7 +704,7 @@ function updateCamera(dt, snap = false) {
     vTarget
       .copy(vPosition)
       .add(
-        new THREE.Vector3(0, 0.25, close ? 0.8 : 0.2).applyAxisAngle(
+        new THREE.Vector3(0, isFactory ? 0.8 : 0.25, close ? 0.8 : isFactory ? 2 : 0.2).applyAxisAngle(
           THREE.Object3D.DEFAULT_UP,
           followYaw,
         ),
@@ -719,7 +725,7 @@ function updateCamera(dt, snap = false) {
   camera.lookAt(lookAt);
   camera.fov = THREE.MathUtils.lerp(
     camera.fov,
-    (mobile ? 55 : 48) + Math.min(9, speed * 0.12),
+    (isFactory ? (mobile ? 60 : 58) : mobile ? 55 : 48) + Math.min(9, speed * 0.12),
     Math.min(1, dt * 3),
   );
   camera.updateProjectionMatrix();
@@ -763,7 +769,7 @@ window.addEventListener("install-help", (e) => {
     input.clear();
   }
   ui.modal(
-    `<p class="eyebrow">YOUR POCKET LAUNCHPAD</p><h2 id="dialog-title">${e.detail.title}</h2><p class="install-instructions">${e.detail.instructions}</p><p class="install-instructions">Once the game has loaded online, all three tests are available offline.</p><button class="primary-button wide" data-action="close">Got it</button>`,
+    `<p class="eyebrow">YOUR POCKET LAUNCHPAD</p><h2 id="dialog-title">${e.detail.title}</h2><p class="install-instructions">${e.detail.instructions}</p><p class="install-instructions">Once the game has loaded online, all four tests are available offline.</p><button class="primary-button wide" data-action="close">Got it</button>`,
   );
 });
 window.addEventListener("pwa-installed", () =>
@@ -865,6 +871,9 @@ function animate(now) {
     .querySelector(".explosion-flash")
     .style.setProperty("--blast", blastFlash);
   if (mode === "game") {
+    // Bank an airborne course finish immediately: a completed flight should
+    // not coast into the roof while its result card is opening.
+    const courseComplete = LEVELS[selected].id === "factory" && physics.outcome === "success";
     if (!paused && !resultShown) {
       if (countdown > 0) {
         countdown -= dt;
@@ -875,8 +884,8 @@ function animate(now) {
             LEVELS[selected].touchHint,
           );
         }
-      } else physics.step(dt, input.state);
-    } else if (resultShown && !paused) {
+      } else if (!courseComplete) physics.step(dt, input.state);
+    } else if (resultShown && !paused && !courseComplete) {
       physics.step(dt, {});
     }
     let state = physics.state;
@@ -924,9 +933,17 @@ function animate(now) {
       hudTick = 0;
     }
     if (!paused && !resultShown) {
-      if (state.altitude > 4 && !airMessage && !wreckStarted) {
+      if (state.altitude > 4 && !airMessage && !wreckStarted && LEVELS[selected].id !== "factory") {
         airMessage = true;
         ui.message("You are now an aviation problem.");
+      }
+      if (state.ringCount > lastRingCount && !state.crashed) {
+        lastRingCount = state.ringCount;
+        audio.ringPass(state.ringCount);
+        vibrate([25, 35, 40]);
+        ui.message(state.outcome === "success"
+          ? "Five rings. Factory flight certified."
+          : `${state.ringCount} / ${state.ringGoal} rings. Keep it airborne.`);
       }
       if (
         state.rampStage === "airborne" &&
@@ -984,6 +1001,7 @@ if (import.meta.env.DEV)
     camera,
     renderer,
     graphics,
+    get environment() { return environment; },
     get graphicsLost() { return graphicsLost; },
     get graphicsLosses() { return graphicsLosses; },
     ui,

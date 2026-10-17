@@ -1,0 +1,176 @@
+/* The flight course stays readable without borrowing space from the controls. */
+.ring-objective {
+  width: 220px;
+  max-width: calc(100vw - 32px);
+  margin-top: 14px;
+  padding: 9px 12px 10px;
+  border: 1px solid #94e8ed55;
+  border-radius: 5px;
+  background: #102128df;
+  box-shadow: 0 2px 18px #0002;
+}
+.ring-objective-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  white-space: nowrap;
+}
+.ring-objective-heading > span {
+  color: #9ff5f4;
+  font: 10px/1.2 monospace;
+  letter-spacing: .12em;
+}
+.ring-objective-heading > b {
+  color: #f5ffff;
+  font-size: 23px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.ring-objective-heading > small {
+  margin-left: auto;
+  color: #b7d6db;
+  font: 8px/1.3 monospace;
+}
+.ring-objective-track {
+  height: 3px;
+  margin-top: 8px;
+  overflow: hidden;
+  background: #a1eff12b;
+}
+.ring-objective-track > i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #a0ffec;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .25s ease;
+}
+
+/* Industrial bays and emissive rings, matching the actual fourth test. */
+.image-factory {
+  overflow: hidden;
+  background-color: #142128;
+  background-image:
+    linear-gradient(0deg, #071018cc, transparent 65%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 100'%3E%3Cpath fill='%23192830' d='M0 0h320v100H0z'/%3E%3Cpath fill='%23394549' d='M0 100 80 55h160l80 45z'/%3E%3Cpath fill='none' stroke='%237a8d94' stroke-width='1' opacity='.6' d='M0 0 80 35h160l80-35M20 0v100M70 0v68M250 0v68M300 0v100M0 25h320M0 45h320M0 66h320M0 100l100-65M320 100 220 35'/%3E%3Cpath stroke='%23dfefee' stroke-width='2' opacity='.6' d='M42 14h45m146 0h45M104 29h30m53 0h30'/%3E%3Cpath fill='%230e1a20' d='M0 79h58v21H0zm266-5h54v26h-54z'/%3E%3Cg fill='none' stroke='%2375ffe4'%3E%3Cellipse cx='125' cy='50' rx='26' ry='31' stroke-width='10' opacity='.12'/%3E%3Cellipse cx='125' cy='50' rx='26' ry='31' stroke-width='3'/%3E%3Cellipse cx='203' cy='44' rx='14' ry='19' stroke-width='7' opacity='.14'/%3E%3Cellipse cx='203' cy='44' rx='14' ry='19' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: cover;
+  background-position: center;
+}
+
+/* Two columns preserve useful hit targets and readable names on smaller
+   screens. Horizontal cards keep the car and Begin test action in view. */
+@media (max-width: 1100px) {
+  html:not([data-player="true"]) .mission-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 14px;
+  }
+  html:not([data-player="true"]) .mission {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-rows: 1fr 2px;
+    column-gap: 10px;
+    min-height: 66px;
+    align-items: center;
+  }
+  html:not([data-player="true"]) .mission-image {
+    width: 100%;
+    height: 62px;
+  }
+  html:not([data-player="true"]) .mission-image > i { display: none; }
+  html:not([data-player="true"]) .mission-info {
+    padding: 8px 0;
+    min-width: 0;
+  }
+  html:not([data-player="true"]) .mission-info h2 {
+    min-height: 0;
+    font-size: 14px;
+    line-height: 1.25;
+    text-wrap: initial;
+  }
+  html:not([data-player="true"]) .mission-info p {
+    font-size: 10px;
+    line-height: 1.3;
+    margin-top: 4px;
+  }
+  html:not([data-player="true"]) .mission-line { grid-column: 1 / -1; }
+}
+
+@media (max-width: 600px) {
+  html:not([data-player="true"]) .mission-grid { gap: 8px 10px; }
+  html:not([data-player="true"]) .mission {
+    grid-template-columns: 42px minmax(0, 1fr);
+    column-gap: 8px;
+    min-height: 58px;
+  }
+  html:not([data-player="true"]) .mission-image { height: 54px; }
+  html:not([data-player="true"]) .mission-image > span { left: 6px; top: 6px; }
+  html:not([data-player="true"]) .mission-info h2 { font-size: 13px; }
+  html:not([data-player="true"]) .mission-info p { display: none; }
+  .ring-objective { width: 207px; margin-top: 10px; padding: 7px 10px 8px; }
+  .ring-objective-heading { gap: 8px; }
+  .ring-objective-heading > b { font-size: 21px; }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  html:not([data-player="true"]) .mission {
+    min-height: 50px;
+    grid-template-columns: 42px minmax(0, 1fr);
+    column-gap: 8px;
+  }
+  html:not([data-player="true"]) .mission-image { height: 46px; }
+  html:not([data-player="true"]) .mission-info h2 { font-size: 12px; min-height: 0; }
+  html:not([data-player="true"]) .mission-info p { display: none; }
+  #hud[data-level="factory"] .mission-title h2 { display: none; }
+  #hud[data-level="factory"] .ring-objective {
+    width: 216px;
+    margin-top: 2px;
+    padding: 5px 9px;
+  }
+  #hud[data-level="factory"] .ring-objective-heading > b { font-size: 18px; }
+  #hud[data-level="factory"] .ring-objective-track { margin-top: 5px; }
+}
+
+/* Social cards get the same four choices, including at 320 by 240. */
+html[data-player="true"] .mission-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+html[data-player="true"] .mission {
+  display: grid;
+  grid-template-columns: 35px minmax(0, 1fr);
+  align-items: center;
+  gap: 0 7px;
+  min-height: 44px;
+}
+html[data-player="true"] .mission-image { width: 35px; height: 42px; }
+html[data-player="true"] .mission-info { min-width: 0; padding: 5px 0; }
+html[data-player="true"] .mission-line { grid-column: 1 / -1; }
+html[data-player="true"] .ring-objective { width: 208px; margin-top: 8px; padding: 6px 9px; }
+html[data-player="true"] .ring-objective-heading > b { font-size: 19px; }
+html[data-player="true"] .ring-objective-track { margin-top: 5px; }
+
+@container (max-height: 550px) {
+  html[data-player="true"] #hud[data-level="factory"] .mission-title h2,
+  html[data-player="true"] #hud[data-level="factory"] .flight-status,
+  html[data-player="true"] #hud[data-level="factory"] #hud-goal { display: none; }
+}
+@container (max-width: 470px) and (min-height: 381px) and (max-height: 550px) {
+  html[data-player="true"] #hud[data-level="factory"] .telemetry { top: 107px; }
+}
+@container (max-height: 380px) {
+  html[data-player="true"] .mission { grid-template-columns: minmax(0, 1fr); min-height: 44px; }
+  html[data-player="true"] .mission-image { display: none; }
+  html[data-player="true"] .mission-info { padding: 6px; }
+  html[data-player="true"] #hud[data-level="factory"] .ring-objective {
+    width: 166px;
+    margin-top: 6px;
+    padding: 4px 7px;
+  }
+  html[data-player="true"] #hud[data-level="factory"] .ring-objective-heading { gap: 6px; }
+  html[data-player="true"] #hud[data-level="factory"] .ring-objective-heading > span { font-size: 8px; }
+  html[data-player="true"] #hud[data-level="factory"] .ring-objective-heading > small { font-size: 6px; }
+  html[data-player="true"] #hud[data-level="factory"] .ring-objective-heading > b { font-size: 16px; }
+  html[data-player="true"] #hud[data-level="factory"] .ring-objective-track { margin-top: 3px; }
+}
