@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Open the URL printed by Vite. A keyboard is recommended; simultaneous touch controls are supported on phones and tablets. Landscape gives the widest view.
+Open the URL printed by Vite. Use the keyboard on desktop, or the two thumb controls on phones and tablets. Landscape gives the widest view.
 
 ## Controls
 
@@ -31,7 +31,13 @@ Hold a thruster to build pressure. Its thrust ramps up and decays after release.
 
 If the car settles on its roof, a short countdown automatically restarts the test. Moving, rolling, or righting the car cancels recovery; airborne inversions and the upside-down ramp remain playable. Pause freezes the countdown, and held controls must be released before they can fire again after a restart.
 
-On phones and tablets, portrait and landscape are both supported, including in the installed app. The interface respects notches and home indicators, adapts to browser toolbar changes, and releases held controls when the screen rotates. Menus use larger touch targets; long instructions and preferences scroll with a finger. On mobile, hold multiple thruster buttons simultaneously. Haptics use the Vibration API where supported; browsers without it remain fully playable. Audio starts after a user gesture. Master sound, music, pilot reactions, haptics, camera shake, graphics quality, and personal records persist locally.
+On phones and tablets, portrait and landscape are both supported, including in the installed app. The interface respects notches and home indicators, adapts to browser toolbar changes, and releases held controls when the screen rotates. Menus use larger touch targets; long instructions and preferences scroll with a finger.
+
+On mobile, the left pad combines acceleration, braking/reverse and steering under one thumb. The right flight pad fires all four jets from its center, pairs from its edges, and individual jets from its corners; slide between targets without lifting your finger. A separate Boost button fires the rear rockets. Both pads can be held simultaneously.
+
+Menus, the flight manual and in-game hints use touch instructions with no keyboard labels. The primary pointer selects the initial interface; actual touch or keyboard input can switch it, including on hybrid devices. A keyboard press while fingers are held waits to switch layouts until those touches end.
+
+Haptics use the Vibration API where supported; browsers without it remain fully playable. Audio starts after a user gesture. Master sound, music, pilot reactions, haptics, camera shake, graphics quality, and personal records persist locally.
 
 ## Flight tests
 
@@ -64,6 +70,7 @@ npm run test:audio
 npm run test:player
 npm run test:responsive
 npm run test:flight
+npm run test:touch
 npm run build
 npm run preview
 ```
@@ -74,7 +81,7 @@ Browser tests cover menus, first-run instructions, actual keyboard input, pause/
 
 Flight checks cover sustained roof-contact recovery across all levels, cancellation on movement or righting, pause/resume, key-repeat release latching, and airborne inversions that must remain controllable. Numerical checks also cover rear acceleration, rear-to-front booster transitions, takeoff clearance, angular momentum, and complete ramp landings.
 
-Responsive checks cover small phones, landscape phones, tablets, and desktop layouts, including level selection, minimum touch targets, real finger scrolling, saved preferences, result actions, first-run instructions, and mid-flight rotation. Layouts and all three level launches have also been exercised in WebKit with mobile emulation; notch and home-indicator insets were checked through Chrome’s safe-area emulation.
+Touch-control checks cover simultaneous analog driving and lift, sliding between paired and individual jets, duplicate holds, release/cancel/reset/rotation, and keyboard/touch switching. Responsive checks cover small phones, landscape phones, tablets, and desktop layouts, including level selection, minimum touch targets, real finger scrolling, saved preferences, result actions, first-run instructions, and mid-flight rotation. Layouts and all three level launches have also been exercised in WebKit with mobile emulation; notch and home-indicator insets were checked through Chrome’s safe-area emulation.
 
 Audio tests additionally decode every MP3, exercise delayed/failed downloads, saved music/voice preferences, master mute, scene music and stale-voice cancellation. `PWA_TEST_URL=http://localhost:4173 npm run test:audio` verifies the entire audio pack can be decoded offline.
 

@@ -289,7 +289,7 @@ kbd {
   letter-spacing: 0.16em;
   color: #626a75;
 }
-.orbit-hint span {
+.orbit-hint > span:last-child {
   margin-left: 8px;
   font-size: 15px;
 }

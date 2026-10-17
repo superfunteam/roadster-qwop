@@ -13,7 +13,8 @@
     "test:pwa": "playwright test tests/pwa.spec.js",
     "test:player": "playwright test tests/player.spec.js",
     "test:responsive": "playwright test tests/responsive.spec.js",
-    "test:flight": "playwright test tests/flight.spec.js"
+    "test:flight": "playwright test tests/flight.spec.js",
+    "test:touch": "playwright test tests/touch-controls.spec.js"
   },
   "dependencies": {
     "three": "^0.180.0",

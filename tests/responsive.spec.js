@@ -142,7 +142,7 @@ for (const [width, height] of sizes) {
         expect(box.visible, `${box.name}: readable telemetry`).toBe(true);
         expect(box.textFits, `${box.name}: telemetry fits at speed`).toBe(true);
       }
-      await expectTappable(page, '#hud [data-control], #hud [data-action], .topbar button:not([hidden])', touch ? 44 : 20);
+      await expectTappable(page, '#hud [data-control], #hud [data-touch-pad="drive"], #hud [data-jets], #hud [data-action], .topbar button:not([hidden])', touch ? 44 : 20);
       const title = await page.locator(".mission-title").boundingBox();
       const status = await page.locator(".flight-status").boundingBox();
       if (status?.width && status?.height) {
@@ -242,7 +242,7 @@ test("phone first-run manual, all three levels, results, and rotation remain ope
     await page.getByRole("button", { name: "Next test", exact: true }).tap();
     await page.waitForFunction(() => window.__roadster.input.enabled);
     await expect(page.locator("#hud-level-name")).toHaveText("The quarter mile");
-    const q = await page.locator('[data-control="q"]').boundingBox();
+    const q = await page.locator('[data-jets="q"]').boundingBox();
     await session.send("Input.dispatchTouchEvent", {
       type: "touchStart", touchPoints: [{ x: q.x + q.width / 2, y: q.y + q.height / 2, id: 1 }],
     });
@@ -250,7 +250,7 @@ test("phone first-run manual, all three levels, results, and rotation remain ope
     await page.setViewportSize({ width: 844, height: 390 });
     await expect.poll(() => page.evaluate(() => window.__roadster.input.state.q), "Rotation releases held thrusters").toBe(0);
     await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-    await expectTappable(page, '#hud [data-control], #hud [data-action]');
+    await expectTappable(page, '#hud [data-control], #hud [data-touch-pad="drive"], #hud [data-jets], #hud [data-action]');
     await page.getByRole("button", { name: "Pause game" }).tap();
     await page.getByRole("button", { name: "Restart test", exact: true }).tap();
     await page.waitForFunction(() => window.__roadster.input.enabled);

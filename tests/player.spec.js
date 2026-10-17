@@ -97,25 +97,27 @@ async function expectControlsAccessible(frame, selectors, availableHeight) {
   const boxes = await frame.evaluate(
     ({ selectors, availableHeight }) => {
       const height = availableHeight ?? innerHeight;
-      return [...document.querySelectorAll(selectors)].map((element) => {
-        const rect = element.getBoundingClientRect();
-        const center = document.elementFromPoint(
-          rect.x + rect.width / 2,
-          rect.y + rect.height / 2,
-        );
-        return {
-          name:
-            element.getAttribute("aria-label") || element.textContent.trim(),
-          width: rect.width,
-          height: rect.height,
-          inBounds:
-            rect.left >= -1 &&
-            rect.top >= -1 &&
-            rect.right <= innerWidth + 1 &&
-            rect.bottom <= height + 1,
-          receivesPointer: element === center || element.contains(center),
-        };
-      });
+      return [...document.querySelectorAll(selectors)]
+        .filter((element) => element.getClientRects().length)
+        .map((element) => {
+          const rect = element.getBoundingClientRect();
+          const center = document.elementFromPoint(
+            rect.x + rect.width / 2,
+            rect.y + rect.height / 2,
+          );
+          return {
+            name:
+              element.getAttribute("aria-label") || element.textContent.trim(),
+            width: rect.width,
+            height: rect.height,
+            inBounds:
+              rect.left >= -1 &&
+              rect.top >= -1 &&
+              rect.right <= innerWidth + 1 &&
+              rect.bottom <= height + 1,
+            receivesPointer: element === center || element.contains(center),
+          };
+        });
     },
     { selectors, availableHeight },
   );
@@ -136,7 +138,7 @@ async function expectControlsAccessible(frame, selectors, availableHeight) {
 
 const menuControls = '#hangar [data-level], #hangar [data-action="start"]';
 const gameControls =
-  '#hud [data-control], #hud [data-action="reset"], #hud [data-action="pause"]';
+  '#hud [data-control], #hud [data-touch-pad="drive"], #hud [data-jets], #hud [data-action="reset"], #hud [data-action="pause"]';
 
 test.describe("sandboxed player runtime", () => {
   test.skip(
@@ -297,7 +299,7 @@ test.describe("touch player", () => {
     hasTouch: true,
   });
 
-  test("portrait iframe uses its full allocated height and accepts four simultaneous touches", async ({
+  test("portrait iframe uses its full allocated height and accepts four simultaneous jet touches", async ({
     page,
     context,
     baseURL,
@@ -312,7 +314,7 @@ test.describe("touch player", () => {
     expect(canvasHeight).toBeCloseTo(600, 0);
     const points = [];
     for (const [index, key] of ["q", "w", "o", "p"].entries()) {
-      const rect = await frame.locator(`[data-control="${key}"]`).boundingBox();
+      const rect = await frame.locator(`[data-jets="${key}"]`).boundingBox();
       points.push({
         id: index + 1,
         x: rect.x + rect.width / 2,
@@ -328,7 +330,7 @@ test.describe("touch player", () => {
       touchPoints: points,
     });
     for (const key of ["q", "w", "o", "p"])
-      await expect(frame.locator(`[data-control="${key}"]`)).toHaveAttribute(
+      await expect(frame.locator(`[data-jets="${key}"]`)).toHaveAttribute(
         "aria-pressed",
         "true",
       );
@@ -347,7 +349,7 @@ test.describe("touch player", () => {
       touchPoints: [],
     });
     for (const key of ["q", "w", "o", "p"])
-      await expect(frame.locator(`[data-control="${key}"]`)).toHaveAttribute(
+      await expect(frame.locator(`[data-jets="${key}"]`)).toHaveAttribute(
         "aria-pressed",
         "false",
       );

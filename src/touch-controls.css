@@ -1,0 +1,484 @@
+/* Touch gets two thumb controls; the keyboard cockpit remains unchanged. */
+.touch-only,
+.touch-controls {
+  display: none;
+}
+
+html[data-input="touch"] .keyboard-only,
+html[data-input="touch"] .booster-console,
+html[data-input="touch"] .drive-controls,
+html[data-input="touch"] .flight-tip,
+html[data-input="touch"] kbd {
+  display: none !important;
+}
+
+html[data-input="touch"] .touch-only {
+  display: initial;
+}
+
+html[data-input="touch"] {
+  --touch-left: max(16px, env(safe-area-inset-left, 0px));
+  --touch-right: max(16px, env(safe-area-inset-right, 0px));
+  --touch-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  --touch-flight-size: clamp(144px, 42vw, 174px);
+  --touch-drive-size: clamp(128px, 38vw, 158px);
+  --touch-drive-height: var(--touch-drive-size);
+  --touch-dock-height: calc(var(--touch-drive-height) + 78px);
+}
+
+html[data-input="touch"] .touch-controls {
+  position: absolute;
+  left: var(--touch-left);
+  right: var(--touch-right);
+  bottom: var(--touch-bottom);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.touch-drive-group {
+  width: var(--touch-drive-size);
+  flex: 0 0 var(--touch-drive-size);
+}
+
+.touch-flight-group {
+  width: var(--touch-flight-size);
+  flex: 0 0 var(--touch-flight-size);
+}
+
+.touch-control-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 5px;
+  margin: 0 0 8px;
+  padding: 3px 5px;
+  border-radius: 3px;
+  background: #08111bbd;
+  color: #e5eaf0;
+  font: 10px/1.2 monospace;
+  letter-spacing: 0.1em;
+  text-shadow: 0 1px 4px #000;
+}
+
+.touch-drive-status,
+.touch-pressure {
+  color: #bfccda;
+  font-size: 9px;
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.touch-drive-pad {
+  position: relative;
+  width: var(--touch-drive-height);
+  max-width: 100%;
+  height: var(--touch-drive-height);
+  margin-inline: auto;
+  border: 1px solid #ffffff38;
+  border-radius: 50%;
+  background:
+    linear-gradient(90deg, transparent calc(50% - .5px), #ffffff13 50%, transparent calc(50% + .5px)),
+    linear-gradient(transparent calc(50% - .5px), #ffffff13 50%, transparent calc(50% + .5px)),
+    radial-gradient(circle, #2a3643a6, #101922bd 70%);
+  box-shadow: 0 3px 20px #0003, inset 0 1px 0 #ffffff0c;
+  pointer-events: auto;
+  touch-action: none;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.touch-drive-pad.held {
+  border-color: #c5e6ff99;
+  background-color: #16344b70;
+}
+
+.drive-stick {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #ffffff59;
+  background: linear-gradient(140deg, #9badbe4f, #d6e2ee19);
+  box-shadow: 0 2px 12px #0004, inset 0 1px 1px #fff3;
+  transform: translate(calc(-50% + var(--stick-x, 0px)), calc(-50% + var(--stick-y, 0px)));
+  pointer-events: none;
+}
+
+.touch-drive-pad.held .drive-stick {
+  border-color: #d3ecff;
+  background: linear-gradient(145deg, #adcde88c, #5477968c);
+  box-shadow: 0 0 20px #a8d9ff24;
+}
+
+.drive-label-forward,
+.drive-label-back,
+.drive-label-left,
+.drive-label-right {
+  position: absolute;
+  color: #c3cfdd;
+  font: 9px/1 monospace;
+  letter-spacing: .04em;
+  pointer-events: none;
+}
+
+.drive-label-forward,
+.drive-label-back {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.drive-label-forward { top: 13px; }
+.drive-label-back { bottom: 13px; }
+.drive-label-left { left: 12px; top: calc(50% - 6px); font-size: 14px; }
+.drive-label-right { right: 12px; top: calc(50% - 6px); font-size: 14px; }
+
+.touch-boost {
+  display: grid;
+  grid-template-columns: 20px auto;
+  grid-template-rows: auto auto;
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+  gap: 2px 8px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 7px 8px;
+  border: 1px solid #a7c8e950;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #28445cad, #132333e6);
+  color: #edf6ff;
+  font: 600 11px/1.1 Arial, sans-serif;
+  letter-spacing: 0.09em;
+  touch-action: none;
+  backdrop-filter: blur(8px);
+}
+
+.touch-boost > span { grid-column: 2; grid-row: 1; }
+
+.touch-boost svg {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  width: 19px;
+  height: 19px;
+  transform: rotate(-90deg);
+}
+
+.touch-boost small {
+  grid-column: 2;
+  color: #a2b8ce;
+  font: 9px/1.2 monospace;
+  letter-spacing: .06em;
+}
+
+.touch-boost.held,
+.touch-boost.firing {
+  border-color: #b1e1ff;
+  color: white;
+  background: linear-gradient(135deg, #5388b6db, #244966ed);
+  box-shadow: 0 0 24px #8bd6ff36, inset 0 0 12px #c9ecff1c;
+}
+
+.touch-boost.held small,
+.touch-boost.firing small { color: #e5f5ff; }
+
+.touch-flight-pad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  width: var(--touch-flight-size);
+  height: var(--touch-flight-size);
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid #ffffff35;
+  border-radius: 12px;
+  background: #0b1422bd;
+  box-shadow: 0 4px 24px #0003;
+  pointer-events: auto;
+  touch-action: none;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.touch-jet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 3px 0;
+  border-radius: 5px;
+  background: #ffffff05;
+  color: #c5d2df;
+  touch-action: none;
+}
+
+.touch-jet-icon {
+  display: block;
+  font: 20px/1 Arial, sans-serif;
+  color: #d8e2ec;
+  pointer-events: none;
+}
+
+.touch-jet-label {
+  font: 9px/1.1 monospace;
+  letter-spacing: .015em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.touch-jet-pair { background: #c6dced10; }
+
+.touch-jet-center {
+  border: 1px solid #f4f7fb;
+  background: #e9eff5;
+  color: #111a26;
+}
+
+.touch-jet-center .touch-jet-icon { color: #111a26; font-size: 24px; }
+.touch-jet-center .touch-jet-label { font-size: 10px; letter-spacing: .09em; }
+
+.touch-jet.firing {
+  background: #81c5f228;
+  color: #d9efff;
+  box-shadow: inset 0 0 0 1px #aedcff50;
+}
+
+.touch-jet.firing .touch-jet-icon { color: #d9efff; }
+
+.touch-jet.active {
+  background: #b5e1ff;
+  color: #0d2030;
+  box-shadow: inset 0 0 0 2px white, 0 0 14px #9cdaff30;
+}
+
+.touch-jet.active .touch-jet-icon { color: #0d2030; }
+
+.touch-flight-hint {
+  margin-top: 7px;
+  color: #a7b6c7;
+  text-align: center;
+  font-size: 9px;
+  line-height: 1.25;
+  text-shadow: 0 1px 4px #000;
+}
+
+.touch-drive-group.autodrive .touch-drive-pad { border-style: dashed; }
+.touch-drive-group.autodrive .touch-drive-status { color: #a9d5ac; }
+
+html[data-input="touch"] .telemetry {
+  top: auto;
+  right: auto;
+  left: var(--touch-left);
+  bottom: calc(var(--touch-bottom) + var(--touch-dock-height) + 20px);
+  max-width: none;
+  display: flex;
+  gap: 14px;
+  padding: 7px 10px;
+  border: 1px solid #ffffff20;
+  border-radius: 5px;
+  background: #08111bd9;
+  backdrop-filter: blur(8px);
+}
+
+html[data-input="touch"] .speed-readout {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 5px;
+}
+
+html[data-input="touch"] .speed-readout b { font-size: 31px; }
+html[data-input="touch"] .speed-readout p { font-size: 7px; letter-spacing: 0; margin: 0; }
+html[data-input="touch"] .telemetry-detail { flex-direction: row; gap: 14px; padding-left: 12px; }
+html[data-input="touch"] .telemetry-detail p { font-size: 7px; letter-spacing: .04em; margin-bottom: 3px; }
+html[data-input="touch"] .telemetry-detail b { font-size: 14px; }
+html[data-input="touch"] .telemetry-detail small { font-size: 10px; }
+
+html[data-input="touch"] .flight-status {
+  left: var(--touch-left);
+  right: auto;
+  top: auto;
+  bottom: calc(var(--touch-bottom) + var(--touch-dock-height) + 74px);
+  max-width: none;
+  gap: 6px;
+}
+
+html[data-input="touch"] .flight-status p { font-size: 8px; letter-spacing: .04em; }
+html[data-input="touch"] .game-toolbar {
+  left: var(--touch-left);
+  right: var(--touch-right);
+  top: auto;
+  bottom: calc(5px + env(safe-area-inset-bottom, 0px));
+  justify-content: space-between;
+  gap: 8px;
+}
+
+html[data-input="touch"] .game-toolbar button {
+  min-width: 44px;
+  min-height: 44px;
+  height: 44px;
+  padding: 6px 2px;
+  border: 0;
+  background: none;
+  gap: 6px;
+  font-size: 11px;
+}
+
+html[data-input="touch"] .game-toolbar svg { width: 16px; height: 16px; }
+html[data-input="touch"] .hud-top .icon-button { min-width: 44px; min-height: 44px; }
+
+html[data-input="touch"] .touch-manual {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0;
+}
+
+.touch-manual-card {
+  padding: 16px;
+  border: 1px solid #ffffff20;
+  border-radius: 6px;
+  background: #ffffff04;
+}
+
+.touch-manual-card h3 {
+  margin: 0 0 10px;
+  color: #edf2f7;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .06em;
+}
+
+.touch-manual-number { display: block; margin-bottom: 10px; color: #8ea1b7; font: 10px/1 monospace; letter-spacing: .14em; }
+.touch-manual-card p { color: #aeb9c7; font-size: 16px; line-height: 1.55; }
+.touch-manual-note { grid-column: 1 / -1; color: #b9c3d0; font-size: 14px; line-height: 1.6; }
+.touch-manual-card p + p { margin-top: 10px; }
+.touch-manual-card b { color: #e8eff8; font-weight: 500; }
+
+@media (max-width: 600px) {
+  html[data-input="touch"] .touch-manual { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 370px) {
+  html[data-input="touch"] { --touch-left: max(12px, env(safe-area-inset-left, 0px)); --touch-right: max(12px, env(safe-area-inset-right, 0px)); }
+}
+
+/* Short landscape keeps both thumb pads at the edges and the road in view. */
+@media (orientation: landscape) and (max-height: 600px) {
+  html[data-input="touch"] {
+    --touch-bottom: calc(50px + env(safe-area-inset-bottom, 0px));
+    --touch-flight-size: 144px;
+    --touch-drive-size: 128px;
+    --touch-drive-height: 104px;
+  }
+
+  html[data-input="touch"] .playing .topbar { height: calc(44px + env(safe-area-inset-top, 0px)); }
+  html[data-input="touch"] .hud-top {
+    top: calc(4px + env(safe-area-inset-top, 0px));
+    left: max(136px, calc(env(safe-area-inset-left, 0px) + 112px));
+    right: var(--touch-right);
+    align-items: flex-start;
+  }
+  html[data-input="touch"] .mission-title { max-width: none; }
+  html[data-input="touch"] .mission-title h2 { margin-top: 10px; font-size: 17px; line-height: 1.2; }
+  html[data-input="touch"] .mission-title > p,
+  html[data-input="touch"] .time-display { display: none; }
+  html[data-input="touch"] .hud-top-right { margin-top: 0; }
+  html[data-input="touch"] .telemetry {
+    top: calc(55px + env(safe-area-inset-top, 0px));
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 5px 8px;
+    gap: 10px;
+  }
+  html[data-input="touch"] .speed-readout b { font-size: 26px; }
+  html[data-input="touch"] .telemetry-detail { gap: 10px; padding-left: 9px; }
+  html[data-input="touch"] .flight-status {
+    display: flex;
+    top: calc(104px + env(safe-area-inset-top, 0px));
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: calc(100% - 320px);
+    text-align: center;
+  }
+  html[data-input="touch"] .flight-status p { font-size: 7px; }
+  html[data-input="touch"] #game-message {
+    top: calc(137px + env(safe-area-inset-top, 0px));
+    max-width: calc(100% - 320px);
+    padding: 7px 9px;
+    font-size: 10px;
+    line-height: 1.4;
+  }
+  html[data-input="touch"] .game-toolbar { bottom: calc(3px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* Larger tablets keep the controls thumb-sized instead of stretching them. */
+@media (min-width: 600px) and (min-height: 601px) {
+  html[data-input="touch"] { --touch-left: max(30px, env(safe-area-inset-left, 0px)); --touch-right: max(30px, env(safe-area-inset-right, 0px)); --touch-flight-size: 186px; --touch-drive-size: 168px; }
+  .touch-jet-label { font-size: 9px; }
+  .touch-jet-icon { font-size: 23px; }
+  .touch-control-heading { font-size: 10px; }
+  .touch-flight-hint { font-size: 10px; }
+}
+
+/* The player uses its allocated height, including X's mobile sheet inset. */
+html[data-input="touch"][data-player="true"] {
+  --touch-left: 10px;
+  --touch-right: 10px;
+  --touch-bottom: 52px;
+  --touch-flight-size: 144px;
+  --touch-drive-size: 128px;
+  --touch-drive-height: 112px;
+}
+
+html[data-input="touch"][data-player="true"] .playing .player-full-link { display: none; }
+html[data-input="touch"][data-player="true"] .game-toolbar { bottom: 4px; justify-content: flex-start; gap: 20px; }
+html[data-input="touch"][data-player="true"] .game-toolbar button span { display: initial; }
+html[data-input="touch"][data-player="true"] .touch-manual { grid-template-columns: 1fr; gap: 8px; margin: 15px 0; }
+html[data-input="touch"][data-player="true"] .touch-manual-card { padding: 11px 13px; }
+html[data-input="touch"][data-player="true"] .touch-manual-card p { font-size: 11px; }
+
+@container (max-width: 470px) and (min-height: 381px) and (max-height: 550px) {
+  html[data-input="touch"][data-player="true"] .hud-top { top: 45px; }
+  html[data-input="touch"][data-player="true"] .mission-title > p,
+  html[data-input="touch"][data-player="true"] .time-display { display: none; }
+  html[data-input="touch"][data-player="true"] .mission-title h2 { font-size: 18px; margin-top: 4px; }
+  html[data-input="touch"][data-player="true"] .telemetry { top: 93px; bottom: auto; }
+  html[data-input="touch"][data-player="true"] .flight-status { top: 77px; bottom: auto; }
+  html[data-input="touch"][data-player="true"] #game-message { top: 147px; max-width: 90%; padding: 5px 9px; font-size: 9px; }
+}
+
+@container (max-height: 380px) {
+  html[data-input="touch"][data-player="true"] .touch-controls { bottom: 8px; }
+  html[data-input="touch"][data-player="true"] .touch-drive-pad { width: 92px; height: 92px; }
+  html[data-input="touch"][data-player="true"] .touch-control-heading,
+  html[data-input="touch"][data-player="true"] .touch-flight-hint { display: none; }
+  html[data-input="touch"][data-player="true"] .touch-boost { margin-top: 8px; }
+  html[data-input="touch"][data-player="true"] .hud-top { top: 0; left: 94px; right: 10px; }
+  html[data-input="touch"][data-player="true"] .mission-title h2 { margin-top: 11px; font-size: 14px; }
+  html[data-input="touch"][data-player="true"] .mission-title > p,
+  html[data-input="touch"][data-player="true"] .time-display,
+  html[data-input="touch"][data-player="true"] .flight-status { display: none; }
+  html[data-input="touch"][data-player="true"] .hud-top .icon-button { position: fixed; top: 40px; right: 8px; width: 44px; height: 44px; margin-top: 0; }
+  html[data-input="touch"][data-player="true"] .telemetry { top: 43px; bottom: auto; left: 10px; transform: none; gap: 7px; padding: 3px 6px; }
+  html[data-input="touch"][data-player="true"] .speed-readout b { font-size: 23px; }
+  html[data-input="touch"][data-player="true"] .speed-readout p { font-size: 6px; }
+  html[data-input="touch"][data-player="true"] .telemetry-detail { gap: 7px; padding-left: 7px; }
+  html[data-input="touch"][data-player="true"] .telemetry-detail p { font-size: 6px; }
+  html[data-input="touch"][data-player="true"] .telemetry-detail b { font-size: 11px; }
+  html[data-input="touch"][data-player="true"] .telemetry-detail small { font-size: 8px; }
+  html[data-input="touch"][data-player="true"] .game-toolbar { left: auto; right: 52px; top: 40px; bottom: auto; gap: 0; }
+  html[data-input="touch"][data-player="true"] .game-toolbar button { min-width: 44px; width: 44px; height: 44px; background: #101926cc; border: 1px solid #ffffff22; border-radius: 4px; }
+  html[data-input="touch"][data-player="true"] .game-toolbar button span { display: none; }
+  html[data-input="touch"][data-player="true"] #game-message { top: 80px; max-width: 80%; padding: 4px 8px; font-size: 8px; }
+}

@@ -3,6 +3,7 @@ import "./viewport.css";
 import "./responsive-menus.css";
 import "./responsive-controls.css";
 import "./embed.css";
+import "./touch-controls.css";
 import { isPlayer, getGameViewport, refreshGameViewport } from "./embed.js";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
@@ -17,6 +18,7 @@ import { buildEnvironment } from "./environments.js";
 import { BoosterEffects } from "./effects.js";
 import { WreckEffects } from "./wreck.js";
 import { Input } from "./input.js";
+import { getControlMode, subscribeControlMode } from "./control-mode.js";
 import { GameAudio } from "./audio.js";
 import { UI, LEVELS } from "./ui.js";
 import { setupPWA } from "./pwa.js";
@@ -68,10 +70,16 @@ renderer.toneMappingExposure = 1.05;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.domElement.tabIndex = 0;
-renderer.domElement.setAttribute(
-  "aria-label",
-  "Roadster game. Use Q, W, O and P for boosters and arrow keys to drive.",
-);
+function describeCanvasControls() {
+  renderer.domElement.setAttribute(
+    "aria-label",
+    getControlMode() === "touch"
+      ? "Roadster game. Use the left pad to drive and the right pad to fly. Hold Boost for rear rockets."
+      : "Roadster game. Use Q, W, O and P for boosters and arrow keys to drive.",
+  );
+}
+describeCanvasControls();
+subscribeControlMode(describeCanvasControls);
 document.querySelector("#game-canvas").appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -804,10 +812,9 @@ function animate(now) {
         countdown -= dt;
         if (countdown <= 0) {
           input.enabled = true;
-          ui.message(
-            LEVELS[selected].id === "ramp"
-              ? "AUTO DRIVE · Ready your Q + W jets."
-              : "Your move.",
+          ui.messageForInput(
+            LEVELS[selected].id === "ramp" ? "AUTO DRIVE · Ready your Q + W jets." : "Your move.",
+            LEVELS[selected].touchHint,
           );
         }
       } else physics.step(dt, input.state);
@@ -869,7 +876,7 @@ function animate(now) {
         !wreckStarted
       ) {
         physics._uiAirborneNotified = true;
-        ui.message("Q + W · Rotate. O + P · Catch it.");
+        ui.messageForInput("Q + W · Rotate. O + P · Catch it.", "Nose up · Rotate. Tail up · Catch it.");
       }
       if (state.time < 0.1) physics._uiAirborneNotified = false;
       if (

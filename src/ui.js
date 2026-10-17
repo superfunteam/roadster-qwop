@@ -1,3 +1,5 @@
+import { getControlMode, subscribeControlMode } from "./control-mode.js";
+
 export const LEVELS = [
   {
     id: "garage",
@@ -8,6 +10,7 @@ export const LEVELS = [
     description: "Get out of the garage. Preferably with the garage.",
     goal: "Clear the garage and reach the driveway.",
     hint: "Use ↑ to roll out. Tap Q W O P for lift. The shelves are not structural.",
+    touchHint: "Slide up to drive. Lift clears a little clutter.",
     distance: "24 m",
     time: "~ 30 sec",
   },
@@ -21,6 +24,7 @@ export const LEVELS = [
       "Four hundred metres. A very questionable power-to-weight ratio.",
     goal: "Cross the finish line. Wheels down is a nice touch.",
     hint: "Hold ↑ to drive. SPACE adds rear thrust. Use short jet bursts to stay level.",
+    touchHint: "Hold Boost for speed. Tap Lift for air.",
     distance: "402 m",
     time: "~ 20 sec",
   },
@@ -34,6 +38,7 @@ export const LEVELS = [
       "The car drives. You handle the part where the ground disappears.",
     goal: "Ride the curve, rotate in the air, and land on your wheels.",
     hint: "Autodrive is on. At the lip, pulse Q + W to complete the flip. Release early.",
+    touchHint: "The car drives itself. Pulse Nose up at the lip.",
     distance: "24 m high",
     time: "~ 15 sec",
   },
@@ -58,8 +63,39 @@ export const svg = (name) =>
 const wordmark = `<svg class="tesla-wordmark" viewBox="0 0 180 24" role="img" aria-label="Tesla"><path fill="currentColor" d="M0 0h30l-3 4H3zm12 7h6v17h-6zM39 0h27v4H39zm0 10h24v4H39zm0 10h27v4H39zM77 0h28l-3 4H77zm0 0h5v14h-5zm0 10h28v4H77zm23 0h5v14h-5zM77 20h28v4H77zM116 0h6v20h21l-3 4h-24zM157 0h8l15 24h-7L161 5l-12 19h-7zm-2 16h12l3 4h-18z"/></svg>`;
 const boosterControl = (key, label, place) =>
   `<button class="jet-button ${place}" data-control="${key.toLowerCase()}" aria-label="Hold ${label} booster"><div class="jet-key">${key}</div><div class="jet-label">${label}</div><div class="jet-meter"><i></i></div></button>`;
+const inputCopy = (keyboard, touch) =>
+  `<span class="keyboard-only">${keyboard}</span><span class="touch-only">${touch}</span>`;
+const touchJets = [
+  ["q", "↖", "FRONT L", "front-left booster"],
+  ["qw", "↑", "NOSE UP", "both front boosters to raise the nose"],
+  ["w", "↗", "FRONT R", "front-right booster"],
+  ["qo", "←", "LEFT", "both left boosters"],
+  ["qwop", "↑", "LIFT", "all four boosters to lift"],
+  ["wp", "→", "RIGHT", "both right boosters"],
+  ["o", "↙", "REAR L", "rear-left booster"],
+  ["op", "↓", "TAIL UP", "both rear boosters to raise the tail"],
+  ["p", "↘", "REAR R", "rear-right booster"],
+];
+const touchControls = `
+  <div class="touch-controls" aria-label="Touch driving and flight controls">
+    <div class="touch-drive-group">
+      <div class="touch-control-heading"><p>DRIVE</p><span class="touch-drive-status">SLIDE TO STEER</span></div>
+      <div class="touch-drive-pad" data-touch-pad="drive" role="group" aria-label="Drive pad: slide up to accelerate, down to brake or reverse, and sideways to steer">
+        <span class="drive-label-forward">DRIVE</span><span class="drive-label-back">BRAKE</span><span class="drive-label-left" aria-hidden="true">←</span><span class="drive-label-right" aria-hidden="true">→</span><span class="drive-stick" aria-hidden="true"></span>
+      </div>
+      <button class="touch-boost" data-control="boost" aria-label="Hold rear rockets"><span>BOOST</span><small>REAR ROCKETS</small>${svg("arrow")}</button>
+    </div>
+    <div class="touch-flight-group">
+      <div class="touch-control-heading"><p>FLIGHT</p><span class="touch-pressure" aria-label="Booster pressure">100%</span></div>
+      <div class="touch-flight-pad" data-touch-pad="flight" role="group" aria-label="Flight pad: hold the center for lift, an edge for paired boosters, or a corner for one booster">
+        ${touchJets.map(([jets, icon, label, description]) => `<button class="touch-jet ${jets === "qwop" ? "touch-jet-center" : jets.length === 2 ? "touch-jet-pair" : ""}" data-jets="${jets}" aria-label="Hold ${description}" aria-pressed="false"><span class="touch-jet-icon" aria-hidden="true">${icon}</span><span class="touch-jet-label">${label}</span></button>`).join("")}
+      </div>
+      <p class="touch-flight-hint">Hold to fire · slide to tilt</p>
+    </div>
+  </div>`;
 export class UI {
   constructor(actions, settings) {
+    getControlMode();
     this.actions = actions;
     this.settings = settings;
     this.selected = 0;
@@ -69,7 +105,7 @@ export class UI {
       ? '<a class="player-full-link" href="https://roadster.superfun.games/" target="_blank" rel="noopener noreferrer">Open full game <span aria-hidden="true">↗</span></a>'
       : "";
     const playerGuide = isPlayer
-      ? '<p class="player-controls-guide"><span>Hold <b>Q W O P</b> to lift each corner.</span><span><b>↑ ↓ ← →</b> drive · <b>SPACE</b> thrust · or hold the buttons.</span></p>'
+      ? `<p class="player-controls-guide">${inputCopy('Hold <b>Q W O P</b> to lift each corner. <b>↑ ↓ ← →</b> drive · <b>SPACE</b> thrust.', 'Left thumb drives. Right thumb flies. Hold Boost for rear thrust.')}</p>`
       : "";
     document.querySelector("#app").innerHTML = `
       <header class="topbar"><a class="brand" href="#" aria-label="Back to hangar">${wordmark}</a>${playerLink}<div class="program">EXPERIMENTAL FLIGHT PROGRAM <i></i></div><nav class="top-actions" aria-label="Game settings"><button class="icon-button" id="install-button" hidden aria-label="Install game">${svg("install")}</button><button class="icon-button" data-action="help" aria-label="Flight manual">${svg("help")}</button><button class="icon-button" id="audio-button" data-action="mute" aria-label="Toggle sound">${svg(settings.muted ? "mute" : "sound")}</button><button class="icon-button" data-action="settings" aria-label="Settings">${svg("settings")}</button></nav></header>
@@ -77,8 +113,8 @@ export class UI {
         <div class="hero-copy"><p class="eyebrow">THE NEXT GENERATION</p><h1><img class="roadster-wordmark" src="/art/roadster-wordmark.svg" alt="Roadster" width="760" height="46" draggable="false" /></h1><p class="hero-tagline">But can it fly?</p></div>
         <div class="spec-rail"><div><b>04</b><p>INDEPENDENT<br>THRUSTERS</p></div><div><b>00</b><p>FLIGHT<br>ASSISTANCE</p></div><div><b>∞</b><p>POSSIBLE<br>REGRETS</p></div></div>
         <div class="hero-index"><i></i><p>FLIGHT PACKAGE<br><span>PROTOTYPE 001</span></p></div>
-        <div class="orbit-hint">DRAG TO INSPECT <span>↔</span></div>
-        <div class="mission-panel"><div class="mission-topline"><p class="eyebrow">SELECT YOUR TEST</p><p class="tiny">THREE TESTS. NO GUARANTEES.</p></div><div class="mission-layout"><div class="mission-grid" role="group" aria-label="Select a level">${LEVELS.map((level, i) => `<button class="mission ${i === 0 ? "selected" : ""}" data-level="${i}" aria-pressed="${i === 0}"><div class="mission-image image-${level.id}"><span>${level.number}</span><i>${i === 0 ? "SELECTED" : "AVAILABLE"}</i></div><div class="mission-info"><h2>${level.name}</h2><p>${level.tag}</p></div><div class="mission-line"></div></button>`).join("")}</div><div class="launch-panel"><div class="launch-description"><p id="selected-type" class="eyebrow">${LEVELS[0].difficulty}</p><p id="selected-description">${LEVELS[0].description}</p></div><button class="primary-button" data-action="start">Begin test ${svg("arrow")}</button><p class="launch-note">KEYBOARD + TOUCH SUPPORTED</p></div></div>${playerGuide}<footer class="hangar-footer"><p>ENGINEERED TO FLY. <span>OPERATED BY YOU.</span></p><p>SUPERFUN GAMES <span>© 2026</span></p></footer></div>
+        <div class="orbit-hint">${inputCopy("DRAG TO INSPECT", "SWIPE TO INSPECT")} <span>↔</span></div>
+        <div class="mission-panel"><div class="mission-topline"><p class="eyebrow">SELECT YOUR TEST</p><p class="tiny">THREE TESTS. NO GUARANTEES.</p></div><div class="mission-layout"><div class="mission-grid" role="group" aria-label="Select a level">${LEVELS.map((level, i) => `<button class="mission ${i === 0 ? "selected" : ""}" data-level="${i}" aria-pressed="${i === 0}"><div class="mission-image image-${level.id}"><span>${level.number}</span><i>${i === 0 ? "SELECTED" : "AVAILABLE"}</i></div><div class="mission-info"><h2>${level.name}</h2><p>${level.tag}</p></div><div class="mission-line"></div></button>`).join("")}</div><div class="launch-panel"><div class="launch-description"><p id="selected-type" class="eyebrow">${LEVELS[0].difficulty}</p><p id="selected-description">${LEVELS[0].description}</p></div><button class="primary-button" data-action="start">Begin test ${svg("arrow")}</button><p class="launch-note">${inputCopy("Q W O P TO FLY · ARROW KEYS TO DRIVE", "LEFT THUMB DRIVES · RIGHT THUMB FLIES")}</p></div></div>${playerGuide}<footer class="hangar-footer"><p>ENGINEERED TO FLY. <span>OPERATED BY YOU.</span></p><p>SUPERFUN GAMES <span>© 2026</span></p></footer></div>
       </section>
       <section id="hud" hidden aria-label="Game controls and telemetry">
         <div class="hud-top"><div class="mission-title"><p class="eyebrow" id="hud-level-number">TEST 01 / ORIENTATION</p><h2 id="hud-level-name">The garage</h2><p id="hud-goal"></p></div><div class="hud-top-right"><div class="time-display"><p class="eyebrow">ELAPSED</p><div id="timer">00:00.00</div></div><button class="icon-button" data-action="pause" aria-label="Pause game">${svg("pause")}</button></div></div>
@@ -88,6 +124,7 @@ export class UI {
         <div class="flight-status"><div class="status-dot"></div><p id="flight-status">GROUND CONTACT</p></div>
         <div class="booster-console"><div class="console-heading"><p>THRUSTER CONTROL</p><div><i id="pressure-fill"></i></div><p id="pressure-value">100%</p></div><div class="booster-row"><div class="jet-pair">${boosterControl("Q", "FRONT L", "front-l")}${boosterControl("W", "FRONT R", "front-r")}</div><div class="car-diagram" aria-hidden="true"><svg viewBox="0 0 60 115"><path d="m16 8 28 0 7 15v72l-6 13H15L9 95V23Z"/><path d="m16 28 28 0-4 25H20Zm4 52h20l5 15H15Z"/><path d="M6 27v17m48-17v17M6 76v17m48-17v17"/><path d="M30 1v11m-4-6 4-5 4 5"/></svg></div><div class="jet-pair">${boosterControl("O", "REAR L", "rear-l")}${boosterControl("P", "REAR R", "rear-r")}</div></div><button class="rear-boost" data-control="boost" aria-label="Hold rear thrust"><span class="space-key">SPACE</span><span>REAR THRUST</span><i></i></button></div>
         <div class="drive-controls"><p id="drive-label">GROUND DRIVE</p><div class="drive-up"><button data-control="throttle" aria-label="Accelerate">↑</button></div><div class="drive-row"><button data-control="left" aria-label="Steer left">←</button><button data-control="brake" aria-label="Brake or reverse">↓</button><button data-control="right" aria-label="Steer right">→</button></div></div>
+        ${touchControls}
         <div class="game-toolbar"><button data-action="reset" aria-label="Reset test">${svg("reset")}<span><kbd>R</kbd> Reset</span></button><button data-action="camera" aria-label="Change camera">${svg("camera")}<span><kbd>C</kbd> Camera</span></button><button data-action="fullscreen" aria-label="Toggle fullscreen">${svg("expand")}<span>Fullscreen</span></button></div>
         <p class="flight-tip" id="flight-tip"></p>
       </section>
@@ -96,6 +133,49 @@ export class UI {
       <div class="modal-backdrop" id="dialog" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><button class="icon-button close-dialog" data-action="close" aria-label="Close dialog">${svg("close")}</button><div id="dialog-content"></div></section></div>
       <div id="toast" role="status"></div>
     `;
+    // Browsers often omit click for a second or third finger. The player
+    // must still be able to pause or reset while holding both thumb pads.
+    const touchActions = new Map();
+    let handledTouchClickAt = -Infinity;
+    document.addEventListener("pointerdown", () => {
+      handledTouchClickAt = -Infinity;
+    }, true);
+    // Opening a dialog can retarget the compatibility click to its backdrop.
+    // Catch that click before any target listener can close the dialog again.
+    document.addEventListener("click", (event) => {
+      if (event.detail > 0 && performance.now() - handledTouchClickAt < 800) {
+        handledTouchClickAt = -Infinity;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    }, true);
+    document.addEventListener("pointerdown", (event) => {
+      if (event.pointerType !== "touch") return;
+      const button = event.target.closest("#hud [data-action]");
+      if (!button || button.disabled) return;
+      touchActions.set(event.pointerId, {
+        button, x: event.clientX, y: event.clientY, moved: false,
+      });
+    });
+    document.addEventListener("pointermove", (event) => {
+      const gesture = touchActions.get(event.pointerId);
+      if (gesture && Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) > 12)
+        gesture.moved = true;
+    });
+    document.addEventListener("pointercancel", (event) => touchActions.delete(event.pointerId));
+    document.addEventListener("pointerup", (event) => {
+      const gesture = touchActions.get(event.pointerId);
+      if (!gesture) return;
+      touchActions.delete(event.pointerId);
+      const hit = document.elementFromPoint(event.clientX, event.clientY);
+      const hud = document.querySelector("#hud");
+      handledTouchClickAt = performance.now();
+      if (gesture.moved || hud.hidden || hud.inert ||
+          !hit || !gesture.button.contains(hit)) return;
+      event.preventDefault();
+      this.actions(gesture.button.dataset.action);
+    });
+    window.addEventListener("blur", () => touchActions.clear());
     document.addEventListener("click", (e) => {
       const action = e.target.closest("[data-action]");
       if (action) {
@@ -110,8 +190,16 @@ export class UI {
       }
     });
     this.dialog = document.querySelector("#dialog");
+    let backdropPressed = false;
+    this.dialog.addEventListener("pointerdown", (event) => {
+      backdropPressed = event.target === this.dialog;
+    });
+    this.dialog.addEventListener("pointercancel", () => { backdropPressed = false; });
     this.dialog.addEventListener("click", (e) => {
-      if (e.target === this.dialog) this.actions("close");
+      // Releasing a thumb that started on a game control is not a backdrop tap.
+      const close = backdropPressed && e.target === this.dialog;
+      backdropPressed = false;
+      if (close) this.actions("close");
     });
     document.addEventListener("keydown", (e) => {
       if (!this.dialog.hidden && e.key === "Tab") {
@@ -145,6 +233,13 @@ export class UI {
       ].map((id) => [id, document.getElementById(id)]),
     );
     this.jetButtons = [...document.querySelectorAll(".jet-button")];
+    this.touchJetButtons = [...document.querySelectorAll(".touch-jet")];
+    this.touchPressure = document.querySelector(".touch-pressure");
+    this.touchBoost = document.querySelector(".touch-boost");
+    subscribeControlMode(() => {
+      if (this.inputMessage) this.refs["game-message"].textContent =
+        this.inputMessage[getControlMode()];
+    });
   }
   select(i) {
     this.selected = i;
@@ -169,7 +264,10 @@ export class UI {
       `TEST ${level.number} / ${level.difficulty}`;
     document.querySelector("#hud-level-name").textContent = level.name;
     document.querySelector("#hud-goal").textContent = level.goal;
-    this.refs["flight-tip"].textContent = level.hint;
+    this.refs["flight-tip"].innerHTML = inputCopy(level.hint, level.touchHint);
+    document.querySelector(".touch-drive-status").textContent =
+      level.id === "ramp" ? "AUTO DRIVE" : "SLIDE TO STEER";
+    document.querySelector(".touch-drive-group").classList.toggle("autodrive", level.id === "ramp");
     document.querySelector("#drive-label").textContent =
       level.id === "ramp" ? "AUTODRIVE ON" : "GROUND DRIVE";
     document
@@ -232,9 +330,19 @@ export class UI {
       b.classList.toggle("firing", amount > 0.1);
       b.setAttribute("aria-pressed", amount > 0.1);
     });
-    document
-      .querySelector(".rear-boost")
-      .style.setProperty("--throttle", s.rearBoost);
+    this.touchPressure.textContent = `${Math.round(s.pressure * 100)}%`;
+    this.touchPressure.classList.toggle("danger", s.pressure < 0.15);
+    const jetIndices = { q: 0, w: 1, o: 2, p: 3 };
+    this.touchJetButtons.forEach((button) => {
+      const amount = Math.min(...[...button.dataset.jets].map((key) => s.boosterLevels[jetIndices[key]]));
+      button.style.setProperty("--throttle", amount);
+      button.classList.toggle("firing", amount > 0.1);
+      button.setAttribute("aria-pressed", amount > 0.1);
+    });
+    this.touchBoost.style.setProperty("--throttle", s.rearBoost);
+    this.touchBoost.classList.toggle("firing", s.rearBoost > 0.1);
+    this.touchBoost.setAttribute("aria-pressed", s.rearBoost > 0.1);
+    document.querySelector(".rear-boost").style.setProperty("--throttle", s.rearBoost);
     document
       .querySelector(".flight-status")
       .classList.toggle("airborne", !s.grounded);
@@ -252,6 +360,7 @@ export class UI {
       ? null
       : `Upside down. Resetting in ${seconds}…`;
     if (this.recoveryMessage) {
+      this.inputMessage = null;
       clearTimeout(this.messageTimeout);
       this.refs["game-message"].textContent = this.recoveryMessage;
     } else if (this.refs["game-message"].textContent === previousMessage) {
@@ -278,7 +387,7 @@ export class UI {
   }
   help() {
     this.modal(
-      `<p class="eyebrow">OWNER’S MANUAL / FLIGHT PACKAGE</p><h2 id="dialog-title">A little thrust.<br>A lot of consequences.</h2><p class="dialog-intro">Each key fires one corner of the car. Hold to build thrust. Release before you think you should.</p><div class="manual-layout"><div class="manual-car"><div class="manual-pair"><kbd>Q</kbd><p>FRONT</p><kbd>W</kbd></div><svg viewBox="0 0 100 180" aria-hidden="true"><path d="M25 8h50l10 25v115l-9 22H24l-9-22V33Z"/><path d="m25 42 50 0-8 42H33Zm8 80h34l11 27H22Z"/></svg><div class="manual-pair"><kbd>O</kbd><p>REAR</p><kbd>P</kbd></div></div><div class="manual-list"><p><b>Q + W</b> Lift the nose. Pitch backward.</p><p><b>O + P</b> Lift the tail. Pitch forward.</p><p><b>Q + W + O + P</b> Lift off. Try to stay level.</p><p><b>SPACE</b> Fire the rear rockets.</p><p><b>↑ ↓ ← →</b> Drive, brake / reverse, steer.</p></div></div><div class="manual-footnote"><p>Tap opposing jets to catch a rotation. Pressure refills when you let go. On touchscreens, hold several controls at once.</p><p><kbd>R</kbd> Start over · <kbd>C</kbd> Camera · <kbd>ESC</kbd> Pause</p></div><button class="primary-button wide" data-action="close">Understood. Probably. ${svg("arrow")}</button>`,
+      `<p class="eyebrow">OWNER’S MANUAL / FLIGHT PACKAGE</p><h2 id="dialog-title">A little thrust.<br>A lot of consequences.</h2><p class="dialog-intro">${inputCopy("Each key fires one corner of the car. Hold to build thrust. Release before you think you should.", "Two thumbs. Four rockets. Let go early.")}</p><div class="keyboard-only"><div class="manual-layout"><div class="manual-car"><div class="manual-pair"><kbd>Q</kbd><p>FRONT</p><kbd>W</kbd></div><svg viewBox="0 0 100 180" aria-hidden="true"><path d="M25 8h50l10 25v115l-9 22H24l-9-22V33Z"/><path d="m25 42 50 0-8 42H33Zm8 80h34l11 27H22Z"/></svg><div class="manual-pair"><kbd>O</kbd><p>REAR</p><kbd>P</kbd></div></div><div class="manual-list"><p><b>Q + W</b> Lift the nose. Pitch backward.</p><p><b>O + P</b> Lift the tail. Pitch forward.</p><p><b>Q + W + O + P</b> Lift off. Try to stay level.</p><p><b>SPACE</b> Fire the rear rockets.</p><p><b>↑ ↓ ← →</b> Drive, brake / reverse, steer.</p></div></div><div class="manual-footnote"><p>Tap opposing jets to catch a rotation. Pressure refills when you let go. On touchscreens, hold several controls at once.</p><p><kbd>R</kbd> Start over · <kbd>C</kbd> Camera · <kbd>ESC</kbd> Pause</p></div></div><div class="touch-only touch-manual"><div class="touch-manual-card"><span class="touch-manual-number">01</span><h3>Left thumb. Drive.</h3><p>Slide up to drive, down to brake or reverse, and sideways to steer. Release to coast.</p><p>Hold <b>Boost</b> for rear thrust.</p></div><div class="touch-manual-card"><span class="touch-manual-number">02</span><h3>Right thumb. Fly.</h3><p>Hold <b>Lift</b> for all four jets. Slide to <b>Nose up</b> or <b>Tail up</b> to pitch.</p><p>Edges fire pairs. Corners fire one jet. Slide between them without lifting your thumb.</p></div><p class="touch-manual-note">Use both pads at once. Release to refill pressure; tap the opposite jets to catch a spin.</p><p class="touch-manual-note">On the ramp, the car drives itself. Reset, Camera and Pause are on screen.</p></div><button class="primary-button wide" data-action="close">Understood. Probably. ${svg("arrow")}</button>`,
     );
   }
   pause() {
@@ -300,11 +409,19 @@ export class UI {
       "result",
     );
   }
+  messageForInput(keyboard, touch, duration = 3200) {
+    this.message(getControlMode() === "touch" ? touch : keyboard, duration);
+    this.inputMessage = { keyboard, touch };
+  }
   message(text, duration = 3200) {
+    this.inputMessage = null;
     this.refs["game-message"].textContent = text;
     clearTimeout(this.messageTimeout);
     this.messageTimeout = setTimeout(
-      () => (this.refs["game-message"].textContent = ""),
+      () => {
+        this.refs["game-message"].textContent = "";
+        this.inputMessage = null;
+      },
       duration,
     );
   }

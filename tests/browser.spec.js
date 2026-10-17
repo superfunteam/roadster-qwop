@@ -355,7 +355,7 @@ test.describe("mobile multi-touch", () => {
     await startLevel(page, 1);
     const touchPoints = [];
     for (const [index, key] of ["q", "w", "o", "p"].entries()) {
-      const button = page.locator(`[data-control="${key}"]`);
+      const button = page.locator(`[data-jets="${key}"]`);
       await expect(button).toBeVisible();
       const box = await button.boundingBox();
       touchPoints.push({
