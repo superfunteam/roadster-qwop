@@ -42,10 +42,15 @@ for event in sorted(report['events'], key=lambda cue: cue['start']):
     if event.get('kind') != 'voice':
         continue
     start, end = event['start'], event['end']
-    text = event['caption']
+    text = event.get('caption')
+    if not text:
+        continue
     position = r'{\an8\pos(960,180)}' if event.get('caption_position', 'top' if event['id'] == 'pilot-controls' else 'bottom') == 'top' else ''
     margin_v = max(0, int(event.get('caption_margin_v', 0)))
-    ass += f'Dialogue: 0,{ass_time(start)},{ass_time(end)},Dialogue,,0,0,{margin_v},,{position}{text}\n'
+    # The final CTA deliberately has no burnt dialogue over its small print;
+    # retain its spoken line in the optional accessibility subtitle file.
+    if event.get('caption_burn', True):
+        ass += f'Dialogue: 0,{ass_time(start)},{ass_time(end)},Dialogue,,0,0,{margin_v},,{position}{text}\n'
     srt.append(f'{len(srt)+1}\n{srt_time(start)} --> {srt_time(end)}\n{text}\n')
 (out / f'{prefix}.ass').write_text(ass)
 (out / f'{prefix}.srt').write_text('\n'.join(srt))

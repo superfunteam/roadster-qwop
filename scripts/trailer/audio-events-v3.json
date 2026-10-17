@@ -1,0 +1,689 @@
+{
+  "name": "v3",
+  "duration": 80,
+  "description": "Picture-locked revised 80-second gameplay trailer. Boosters, impacts, explosions and rings follow captured input/physics telemetry. Includes eight newly generated stressed ElevenLabs performances; no OH NO line, no freeze-frame silence, no burnt final-line caption. Fresh voices are tracked outside public/ so the deployed game size stays unchanged.",
+  "music": "reference/qa/trailer/audio/roadster-trailer-v3-music-80s.wav",
+  "events": [
+    {
+      "id": "booster-loop",
+      "start": 0,
+      "duration": 5.26,
+      "gain_db": 0,
+      "fade_out": 0.06
+    },
+    {
+      "id": "explosion",
+      "start": 5.3,
+      "duration": 0.87,
+      "gain_db": 0.2,
+      "fade_out": 0.15
+    },
+    {
+      "id": "crunch",
+      "start": 5.31,
+      "duration": 0.83,
+      "gain_db": -4,
+      "fade_out": 0.1
+    },
+    {
+      "id": "booster-loop",
+      "start": 6.2,
+      "duration": 4.8,
+      "gain_db": -11,
+      "fade_in": 0.14,
+      "fade_out": 0.14
+    },
+    {
+      "id": "booster-ignite",
+      "start": 11.3,
+      "gain_db": -3.2
+    },
+    {
+      "id": "booster-loop",
+      "start": 11.33,
+      "duration": 5.94,
+      "gain_db": -1.5,
+      "fade_in": 0.03,
+      "fade_out": 0.04
+    },
+    {
+      "id": "mission-start",
+      "start": 11.4,
+      "kind": "voice",
+      "gain_db": 0.7,
+      "caption": "FLIGHT CONTROLS ON! NOBODY PANIC!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom"
+    },
+    {
+      "id": "booster-ignite",
+      "start": 12.0,
+      "gain_db": -4.2
+    },
+    {
+      "id": "impact-light-1",
+      "start": 12.3,
+      "duration": 0.38,
+      "gain_db": -8.5,
+      "fade_out": 0.08
+    },
+    {
+      "id": "impact-light-1",
+      "start": 12.4333,
+      "duration": 0.95,
+      "gain_db": -1.8,
+      "fade_out": 0.1
+    },
+    {
+      "id": "impact-light-2",
+      "start": 12.5,
+      "duration": 0.6,
+      "gain_db": -4.5,
+      "fade_out": 0.08
+    },
+    {
+      "id": "debris",
+      "start": 12.9,
+      "duration": 0.8,
+      "gain_db": -7,
+      "fade_out": 0.12
+    },
+    {
+      "id": "impact-heavy-2",
+      "start": 16.0667,
+      "duration": 1.1,
+      "gain_db": -1.8,
+      "fade_out": 0.12
+    },
+    {
+      "id": "crunch",
+      "start": 16.1,
+      "duration": 0.72,
+      "gain_db": -3.2,
+      "fade_out": 0.08
+    },
+    {
+      "id": "pilot-insurance",
+      "start": 16.3,
+      "kind": "voice",
+      "gain_db": 1.8,
+      "caption": "THAT WAS A LOAD-BEARING GARAGE!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom"
+    },
+    {
+      "id": "impact-light-2",
+      "start": 16.6667,
+      "duration": 0.55,
+      "gain_db": -3.5,
+      "fade_out": 0.07
+    },
+    {
+      "id": "crunch",
+      "start": 17.0667,
+      "duration": 0.2,
+      "gain_db": -4.8,
+      "fade_out": 0.035
+    },
+    {
+      "id": "explosion",
+      "start": 17.3,
+      "duration": 1.7,
+      "gain_db": -0.5,
+      "fade_out": 0.3
+    },
+    {
+      "id": "impact-heavy-1",
+      "start": 17.3,
+      "duration": 0.9,
+      "gain_db": -2.5,
+      "fade_out": 0.1
+    },
+    {
+      "id": "glass",
+      "start": 17.34,
+      "duration": 0.9,
+      "gain_db": -4.5,
+      "fade_out": 0.08
+    },
+    {
+      "id": "debris",
+      "start": 18.0,
+      "duration": 0.95,
+      "gain_db": -4.4,
+      "fade_out": 0.12
+    },
+    {
+      "id": "booster-ignite",
+      "start": 21,
+      "gain_db": -0.5
+    },
+    {
+      "id": "booster-loop",
+      "start": 21.08,
+      "duration": 3.92,
+      "gain_db": 1.0,
+      "fade_in": 0.03,
+      "fade_out": 0.08
+    },
+    {
+      "id": "pilot-controls",
+      "start": 22.1,
+      "kind": "voice",
+      "gain_db": 1.8,
+      "caption": "WHICH ONE IS DOWN?!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom"
+    },
+    {
+      "id": "booster-loop",
+      "start": 25,
+      "duration": 1.35,
+      "gain_db": 1.0,
+      "fade_out": 0.06
+    },
+    {
+      "id": "explosion",
+      "start": 26.4,
+      "duration": 1.55,
+      "gain_db": 0.5,
+      "fade_out": 0.2
+    },
+    {
+      "id": "impact-heavy-1",
+      "start": 26.4,
+      "duration": 0.8,
+      "gain_db": -4
+    },
+    {
+      "id": "booster-loop",
+      "start": 28,
+      "duration": 2.7,
+      "gain_db": -0.8,
+      "fade_in": 0.025,
+      "fade_out": 0.04
+    },
+    {
+      "id": "booster-ignite",
+      "start": 28.8,
+      "gain_db": -3.2
+    },
+    {
+      "id": "impact-light-2",
+      "start": 29.833,
+      "gain_db": -3.5,
+      "duration": 0.7
+    },
+    {
+      "id": "crunch",
+      "start": 30.533,
+      "gain_db": -4,
+      "duration": 0.19,
+      "fade_out": 0.04
+    },
+    {
+      "id": "explosion",
+      "start": 30.733,
+      "duration": 2.45,
+      "gain_db": 0.8,
+      "fade_out": 0.35
+    },
+    {
+      "id": "impact-heavy-1",
+      "start": 30.733,
+      "duration": 1.1,
+      "gain_db": -1.7
+    },
+    {
+      "id": "crunch",
+      "start": 30.75,
+      "duration": 0.85,
+      "gain_db": -3.5
+    },
+    {
+      "id": "glass",
+      "start": 30.77,
+      "duration": 1.05,
+      "gain_db": -4
+    },
+    {
+      "id": "pilot-regret",
+      "start": 31.05,
+      "kind": "voice",
+      "gain_db": 1.8,
+      "caption": "I HAVE MADE A TERRIBLE PURCHASE!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom"
+    },
+    {
+      "id": "debris",
+      "start": 31.83,
+      "duration": 2.05,
+      "gain_db": -3.8,
+      "fade_out": 0.15
+    },
+    {
+      "id": "impact-light-1",
+      "start": 36.192,
+      "gain_db": -7
+    },
+    {
+      "id": "pilot-landing",
+      "start": 36.7,
+      "kind": "voice",
+      "gain_db": 1.5,
+      "caption": "I CAN STILL LAND THIS! I CAN STILL LAND THIS!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom"
+    },
+    {
+      "id": "explosion",
+      "start": 40.033,
+      "duration": 2.5,
+      "gain_db": 1.4,
+      "fade_out": 0.35
+    },
+    {
+      "id": "impact-heavy-2",
+      "start": 40.033,
+      "duration": 1.3,
+      "gain_db": -2.2
+    },
+    {
+      "id": "glass",
+      "start": 40.09,
+      "duration": 0.95,
+      "gain_db": -6
+    },
+    {
+      "id": "debris",
+      "start": 41.1,
+      "duration": 1.65,
+      "gain_db": -5,
+      "fade_out": 0.12
+    },
+    {
+      "id": "booster-ignite",
+      "start": 44,
+      "gain_db": -1
+    },
+    {
+      "id": "booster-loop",
+      "start": 44.08,
+      "duration": 1.42,
+      "gain_db": 0.6,
+      "fade_out": 0.04
+    },
+    {
+      "id": "explosion",
+      "start": 45.533,
+      "duration": 0.425,
+      "gain_db": 0,
+      "fade_out": 0.08
+    },
+    {
+      "id": "booster-ignite",
+      "start": 46,
+      "gain_db": 0
+    },
+    {
+      "id": "booster-loop",
+      "start": 46.08,
+      "duration": 4.89,
+      "gain_db": -0.7,
+      "fade_in": 0.02,
+      "fade_out": 0.03
+    },
+    {
+      "id": "ring-pass",
+      "start": 47.9667,
+      "count": 1,
+      "gain_db": 6.5,
+      "fade_out": 0.01
+    },
+    {
+      "id": "ring-pass",
+      "start": 48.7333,
+      "count": 2,
+      "gain_db": 6.5,
+      "fade_out": 0.01
+    },
+    {
+      "id": "ring-pass",
+      "start": 49.3333,
+      "count": 3,
+      "gain_db": 6.5,
+      "fade_out": 0.01
+    },
+    {
+      "id": "ring-pass",
+      "start": 49.9,
+      "count": 4,
+      "gain_db": 6.5,
+      "fade_out": 0.01
+    },
+    {
+      "id": "ring-pass",
+      "start": 50.4333,
+      "count": 5,
+      "gain_db": 6.5,
+      "fade_out": 0.01
+    },
+    {
+      "id": "booster-loop",
+      "start": 51,
+      "duration": 4.32,
+      "gain_db": 0.5,
+      "fade_in": 0.02,
+      "fade_out": 0.05
+    },
+    {
+      "id": "impact-heavy-2",
+      "start": 53.333,
+      "duration": 0.9,
+      "gain_db": -0.2,
+      "fade_out": 0.12
+    },
+    {
+      "id": "crunch",
+      "start": 53.35,
+      "duration": 0.7,
+      "gain_db": -2.5,
+      "fade_out": 0.08
+    },
+    {
+      "id": "glass",
+      "start": 53.4,
+      "duration": 0.75,
+      "gain_db": -4.5,
+      "fade_out": 0.1
+    },
+    {
+      "id": "pilot-good-job-v3",
+      "start": 53.7,
+      "kind": "voice",
+      "source": "scripts/trailer/audio-v3/pilot-good-job-v3.mp3",
+      "gain_db": 1.8,
+      "caption": "DID I DO A GOOD JOB?!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom",
+      "source_start": 0.62,
+      "duration": 1.28
+    },
+    {
+      "id": "explosion",
+      "start": 55.367,
+      "duration": 0.62,
+      "gain_db": 1.1,
+      "fade_out": 0.1
+    },
+    {
+      "id": "impact-heavy-1",
+      "start": 55.367,
+      "duration": 0.6,
+      "gain_db": -0.5,
+      "fade_out": 0.1
+    },
+    {
+      "id": "booster-ignite",
+      "start": 56,
+      "gain_db": 0.5
+    },
+    {
+      "id": "booster-loop",
+      "start": 56.08,
+      "duration": 1.39,
+      "gain_db": 1.0,
+      "fade_out": 0.04
+    },
+    {
+      "id": "booster-loop",
+      "start": 57.5,
+      "duration": 1.47,
+      "gain_db": 0.3,
+      "fade_in": 0.02,
+      "fade_out": 0.05
+    },
+    {
+      "id": "ring-pass",
+      "start": 57.6667,
+      "count": 3,
+      "gain_db": 4.5,
+      "fade_out": 0.01
+    },
+    {
+      "id": "booster-loop",
+      "start": 59,
+      "duration": 1.09,
+      "gain_db": 0.5,
+      "fade_in": 0.02,
+      "fade_out": 0.04
+    },
+    {
+      "id": "pilot-abort-v3",
+      "start": 59.35,
+      "kind": "voice",
+      "source": "scripts/trailer/audio-v3/pilot-abort-v3.mp3",
+      "gain_db": 1.8,
+      "caption": "ABORT! ABORT!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom",
+      "playback_rate": 1.12,
+      "duration": 1.3
+    },
+    {
+      "id": "explosion",
+      "start": 60.133,
+      "duration": 1.1,
+      "gain_db": -0.5,
+      "fade_out": 0.18
+    },
+    {
+      "id": "booster-loop",
+      "start": 60.5,
+      "duration": 0.48,
+      "gain_db": 0.6,
+      "fade_in": 0.03,
+      "fade_out": 0.04
+    },
+    {
+      "id": "pilot-porsche-v3",
+      "start": 60.8,
+      "kind": "voice",
+      "source": "scripts/trailer/audio-v3/pilot-porsche-v3.mp3",
+      "gain_db": 1.8,
+      "caption": "NOT THE PORSCHE!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom",
+      "duration": 1.2
+    },
+    {
+      "id": "explosion",
+      "start": 61.033,
+      "duration": 0.92,
+      "gain_db": 0.8,
+      "fade_out": 0.14
+    },
+    {
+      "id": "crunch",
+      "start": 61.05,
+      "duration": 0.65,
+      "gain_db": -3,
+      "fade_out": 0.08
+    },
+    {
+      "id": "booster-loop",
+      "start": 62,
+      "duration": 0.49,
+      "gain_db": 0.4,
+      "fade_in": 0.02,
+      "fade_out": 0.04
+    },
+    {
+      "id": "pilot-warranty-v3",
+      "start": 62.12,
+      "kind": "voice",
+      "source": "scripts/trailer/audio-v3/pilot-warranty-v3.mp3",
+      "gain_db": 1.8,
+      "caption": "WARRANTY!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom",
+      "duration": 1.05
+    },
+    {
+      "id": "explosion",
+      "start": 62.467,
+      "duration": 0.93,
+      "gain_db": 0.8,
+      "fade_out": 0.12
+    },
+    {
+      "id": "crunch",
+      "start": 62.483,
+      "duration": 0.85,
+      "gain_db": -4,
+      "fade_out": 0.1
+    },
+    {
+      "id": "booster-loop",
+      "start": 63.5,
+      "duration": 1.47,
+      "gain_db": 0.5,
+      "fade_in": 0.02,
+      "fade_out": 0.04
+    },
+    {
+      "id": "booster-loop",
+      "start": 65,
+      "duration": 0.76,
+      "gain_db": 0.6,
+      "fade_in": 0.02,
+      "fade_out": 0.04
+    },
+    {
+      "id": "pilot-nailed-it-v3",
+      "start": 65.0,
+      "kind": "voice",
+      "source": "scripts/trailer/audio-v3/pilot-nailed-it-v3.mp3",
+      "gain_db": 1.8,
+      "caption": "NAILED IT!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom",
+      "playback_rate": 1.2,
+      "duration": 1.5
+    },
+    {
+      "id": "explosion",
+      "start": 65.8,
+      "duration": 0.9,
+      "gain_db": 0.8,
+      "fade_out": 0.14
+    },
+    {
+      "id": "booster-loop",
+      "start": 66.5,
+      "duration": 0.49,
+      "gain_db": 0.4,
+      "fade_in": 0.02,
+      "fade_out": 0.04
+    },
+    {
+      "id": "pilot-brakes-v3",
+      "start": 66.6,
+      "kind": "voice",
+      "source": "scripts/trailer/audio-v3/pilot-brakes-v3.mp3",
+      "gain_db": 1.8,
+      "caption": "BRAKES! BRAAAKES!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom",
+      "duration": 2.16
+    },
+    {
+      "id": "explosion",
+      "start": 67.033,
+      "duration": 1.55,
+      "gain_db": 0.4,
+      "fade_out": 0.18
+    },
+    {
+      "id": "impact-heavy-2",
+      "start": 67.033,
+      "duration": 0.85,
+      "gain_db": -3
+    },
+    {
+      "id": "debris",
+      "start": 68.15,
+      "duration": 0.7,
+      "gain_db": -6,
+      "fade_out": 0.12
+    },
+    {
+      "id": "pilot-spine-v3",
+      "start": 69.05,
+      "kind": "voice",
+      "source": "scripts/trailer/audio-v3/pilot-spine-v3.mp3",
+      "gain_db": 1.8,
+      "caption": "MY SPINE!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom",
+      "playback_rate": 1.1,
+      "duration": 1.86
+    },
+    {
+      "id": "explosion",
+      "start": 69.183,
+      "duration": 2.35,
+      "gain_db": 2.8,
+      "fade_out": 0.6
+    },
+    {
+      "id": "impact-heavy-1",
+      "start": 69.183,
+      "duration": 1.2,
+      "gain_db": -0.2,
+      "fade_out": 0.1
+    },
+    {
+      "id": "glass",
+      "start": 69.24,
+      "duration": 1.1,
+      "gain_db": -3.5,
+      "fade_out": 0.12
+    },
+    {
+      "id": "debris",
+      "start": 70.22,
+      "duration": 1.0,
+      "gain_db": -4,
+      "fade_out": 0.18
+    },
+    {
+      "id": "booster-loop",
+      "start": 71.0,
+      "duration": 5.5,
+      "gain_db": -14,
+      "fade_in": 0.25,
+      "fade_out": 0.2
+    },
+    {
+      "id": "mission-landing-v3",
+      "start": 72.2,
+      "kind": "voice",
+      "source": "scripts/trailer/audio-v3/mission-landing-v3.mp3",
+      "gain_db": 0.8,
+      "caption": "EXCELLENT DATA! TERRIBLE LANDING!",
+      "caption_margin_v": 24,
+      "caption_position": "bottom",
+      "caption_burn": false
+    },
+    {
+      "id": "booster-loop",
+      "start": 76.3,
+      "duration": 3.7,
+      "gain_db": -14,
+      "fade_in": 0.2,
+      "fade_out": 2.0
+    }
+  ]
+}

@@ -5,6 +5,8 @@ Usage: python3 scripts/trailer/audio-mix.py /path/to/events.json
 JSON format: {"events": [{"id": "pilot-oh-no", "start": 0.1,
 "kind": "voice", "gain_db": 1.5, "duration": 1.8}], "name": "final"}
 Optional event keys: source_start, playback_rate, pan (-1..1), gain_db.
+Use source for a repository-relative trailer-only audio file; generated trailer
+voices can stay outside public/ so the game download does not grow.
 Effects default to modest gain. Explosion/fire are compressed before mixing.
 Voices automatically duck the music with a short attack and smooth release.
 """
@@ -89,7 +91,9 @@ def main():
         if ident == 'ring-pass':
             data = ring_pass(event.get('count', 1))
         else:
-            path=AUDIO/f'{ident}.mp3'
+            path=(ROOT / event['source']).resolve() if event.get('source') else AUDIO/f'{ident}.mp3'
+            if not path.is_relative_to(ROOT):
+                raise ValueError(f'Audio source must stay inside the workspace: {ident}')
             if not path.is_file():
                 raise FileNotFoundError(path)
             filters=['highpass=f=40']

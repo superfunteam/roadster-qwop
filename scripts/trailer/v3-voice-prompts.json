@@ -1,0 +1,13 @@
+{
+  "description": "Fresh, stressed pilot reactions for the third gameplay-trailer cut. Voices are intentionally shouted, quick and funny; no calm narration.",
+  "voices": [
+    {"id":"pilot-good-job-v3","role":"pilot","text":"[breathless][panicked][shouting] DID I DO A GOOD JOB?!","caption":"DID I DO A GOOD JOB?!"},
+    {"id":"mission-landing-v3","role":"mission","text":"[stressed][shouting] EXCELLENT DATA! TERRIBLE LANDING!","caption":"EXCELLENT DATA! TERRIBLE LANDING!"},
+    {"id":"pilot-brakes-v3","role":"pilot","text":"[panicked][shouting] BRAKES! BRAAAKES!","caption":"BRAKES! BRAAAKES!"},
+    {"id":"pilot-porsche-v3","role":"pilot","text":"[panicked][shouting] NOT THE PORSCHE!","caption":"NOT THE PORSCHE!"},
+    {"id":"pilot-spine-v3","role":"pilot","text":"[screaming] MY SPINE!","caption":"MY SPINE!"},
+    {"id":"pilot-warranty-v3","role":"pilot","text":"[panicked][shouting] WARRANTY!","caption":"WARRANTY!"},
+    {"id":"pilot-abort-v3","role":"pilot","text":"[panicked][shouting] ABORT! ABORT!","caption":"ABORT! ABORT!"},
+    {"id":"pilot-nailed-it-v3","role":"pilot","text":"[shouting][strained] NAILED IT!","caption":"NAILED IT!"}
+  ]
+}

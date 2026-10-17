@@ -1,0 +1,194 @@
+[
+  {
+    "name": "v3-porsche-flip",
+    "level": 1,
+    "duration": 6.3,
+    "hud": "controls",
+    "camera": {
+      "follow": "rival",
+      "offset": [
+        -9,
+        4.5,
+        -10
+      ],
+      "fov": 55
+    },
+    "keys": [
+      [
+        0,
+        9,
+        [
+          "ArrowUp"
+        ]
+      ],
+      [
+        0,
+        9,
+        [
+          "Space"
+        ]
+      ],
+      [
+        0.3,
+        1,
+        [
+          "ArrowRight"
+        ]
+      ],
+      [
+        1,
+        1.6,
+        [
+          "ArrowLeft"
+        ]
+      ],
+      [
+        1.1,
+        2.3,
+        [
+          "KeyW",
+          "KeyP"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "v3-porsche-flip-alt",
+    "level": 1,
+    "duration": 6.4,
+    "hud": "controls",
+    "camera": {
+      "follow": "rival",
+      "offset": [
+        8,
+        5,
+        -10
+      ],
+      "fov": 55
+    },
+    "keys": [
+      [
+        0,
+        9,
+        [
+          "ArrowUp"
+        ]
+      ],
+      [
+        0,
+        9,
+        [
+          "Space"
+        ]
+      ],
+      [
+        0.3,
+        1,
+        [
+          "ArrowRight"
+        ]
+      ],
+      [
+        1,
+        1.6,
+        [
+          "ArrowLeft"
+        ]
+      ],
+      [
+        1.1,
+        2.3,
+        [
+          "KeyW",
+          "KeyP"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "v3-garage-barrel",
+    "level": 0,
+    "duration": 8,
+    "hud": "controls",
+    "camera": {
+      "offset": [
+        7,
+        3.6,
+        -9
+      ],
+      "fov": 53
+    },
+    "keys": [
+      [
+        0,
+        11,
+        [
+          "ArrowUp"
+        ]
+      ],
+      [
+        1,
+        11,
+        [
+          "Space"
+        ]
+      ],
+      [
+        0.3,
+        1.5,
+        [
+          "KeyQ",
+          "KeyO"
+        ]
+      ],
+      [
+        1.2,
+        11,
+        [
+          "KeyW"
+        ]
+      ]
+    ]
+  },
+  {
+    "name": "v3-factory-barrel",
+    "level": 3,
+    "duration": 9,
+    "camera": {
+      "offset": [
+        8,
+        5,
+        -15
+      ],
+      "fov": 54
+    },
+    "keys": [
+      [
+        0,
+        10,
+        [
+          "Space"
+        ]
+      ],
+      [
+        0.75,
+        1.55,
+        [
+          "KeyQ",
+          "KeyW",
+          "KeyO",
+          "KeyP"
+        ]
+      ],
+      [
+        2,
+        10,
+        [
+          "KeyQ",
+          "KeyO"
+        ]
+      ]
+    ],
+    "hud": "controls"
+  }
+]

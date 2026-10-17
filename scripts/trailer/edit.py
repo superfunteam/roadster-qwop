@@ -14,6 +14,7 @@ FFMPEG = '/opt/homebrew/bin/ffmpeg'
 parser = argparse.ArgumentParser()
 parser.add_argument('--plan', default=str(ROOT / 'scripts/trailer/edit.json'))
 parser.add_argument('--audio', help='Final mastered soundtrack')
+parser.add_argument('--output', type=Path, help='Output MP4 path; keeps approved versions intact')
 parser.add_argument('--captions', help='ASS dialogue captions')
 parser.add_argument('--reuse', action='store_true', help='Reuse only segments with matching sources, edit and renderer')
 args = parser.parse_args()
@@ -67,7 +68,7 @@ def render_segment(pair):
     graph = f'[0:v]{base},fps={fps},setsar=1[scene];'
     if segment.get('overlay'):
         graph += '[1:v]format=rgba,fade=t=in:st=0:d=0.16:alpha=1'
-        if segment['overlay'] != 'end':
+        if not segment['overlay'].startswith('end'):
             graph += f',fade=t=out:st={max(.2, length - .2)}:d=0.2:alpha=1'
         graph += '[title];[scene][title]overlay=0:0:shortest=1[v]'
     else:
@@ -88,7 +89,8 @@ picture = WORK / 'picture.mp4'
 command(['-f', 'concat', '-safe', '0', '-i', str(concat), '-c', 'copy', '-movflags', '+faststart', str(picture)])
 assert frame_count(picture) == round(duration * fps), f'Trailer must be exactly {duration} seconds.'
 if args.audio:
-    output = OUT / f'roadster-hype-trailer-{duration}s.mp4'
+    output = args.output.resolve() if args.output else OUT / f'roadster-hype-trailer-{duration}s.mp4'
+    output.parent.mkdir(parents=True, exist_ok=True)
     opts = ['-i', str(picture), '-i', str(Path(args.audio).resolve()), '-map', '0:v:0', '-map', '1:a:0']
     if args.captions:
         opts += ['-vf', f"ass={Path(args.captions).resolve()}", '-c:v', 'libx264', '-crf', '18', '-preset', 'slow', '-threads', '6']
@@ -96,7 +98,7 @@ if args.audio:
         opts += ['-c:v', 'copy']
     opts += ['-c:a', 'aac', '-b:a', '256k', '-ar', '48000', '-ac', '2', '-t', str(duration), '-pix_fmt', 'yuv420p',
              '-movflags', '+faststart', '-metadata', 'title=Roadster — But Can It Fly? | Official Gameplay Trailer',
-             '-metadata', f'comment=Captured from actual game physics and player inputs. {duration}-second gameplay edit.', str(output)]
+             '-metadata', 'comment=' + plan.get('description', f'Captured from actual game physics and player inputs. {duration}-second gameplay edit.'), str(output)]
     command(opts)
     print(output)
 else:

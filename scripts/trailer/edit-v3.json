@@ -1,0 +1,142 @@
+{
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "duration": 80,
+  "description": "Real game physics and player inputs, with live controls. Hovering logo and closing shots are branded showroom animation. Revised 80-second gameplay trailer.",
+  "segments": [
+    {
+      "clip": "hud-drag-left-spin",
+      "in": 1,
+      "duration": 6.2
+    },
+    {
+      "clip": "v3-hero-hover-intro",
+      "in": 0.4,
+      "duration": 4.8,
+      "overlay": "intro-v3"
+    },
+    {
+      "clip": "v3-garage-barrel",
+      "in": 0,
+      "duration": 3,
+      "overlay": "garage"
+    },
+    {
+      "clip": "v3-garage-barrel",
+      "in": 3,
+      "duration": 5
+    },
+    {
+      "clip": "hud-porsche-race",
+      "in": 0,
+      "duration": 3,
+      "overlay": "drag"
+    },
+    {
+      "clip": "hud-drag-keyboard-hud",
+      "in": 2,
+      "duration": 3
+    },
+    {
+      "clip": "hud-drag-left-spin",
+      "in": 4.9,
+      "duration": 3
+    },
+    {
+      "clip": "v3-porsche-flip",
+      "in": 0.3,
+      "duration": 4,
+      "overlay": "porsche"
+    },
+    {
+      "clip": "v3-porsche-flip-alt",
+      "in": 4.3,
+      "duration": 2
+    },
+    {
+      "clip": "hud-ramp-inversion",
+      "in": 1,
+      "duration": 3,
+      "overlay": "ramp"
+    },
+    {
+      "clip": "hud-ramp-inversion-close",
+      "in": 4,
+      "duration": 3
+    },
+    {
+      "clip": "hud-ramp-inversion-close",
+      "in": 7,
+      "duration": 3
+    },
+    {
+      "clip": "hud-ramp-barrel",
+      "in": 4,
+      "duration": 3
+    },
+    {
+      "clip": "hud-factory-rings",
+      "in": 0,
+      "duration": 5,
+      "overlay": "factory"
+    },
+    {
+      "clip": "v3-factory-barrel",
+      "in": 3.5,
+      "duration": 5
+    },
+    {
+      "clip": "hud-drag-flyaway",
+      "in": 2,
+      "duration": 1.5,
+      "overlay": "montage"
+    },
+    {
+      "clip": "v3-factory-barrel",
+      "in": 3.2,
+      "duration": 1.5
+    },
+    {
+      "clip": "hud-ramp-barrel",
+      "in": 5.4,
+      "duration": 1.5
+    },
+    {
+      "clip": "v3-porsche-flip",
+      "in": 2.5,
+      "duration": 1.5
+    },
+    {
+      "clip": "v3-factory-barrel",
+      "in": 7.4,
+      "duration": 1.5
+    },
+    {
+      "clip": "hud-drag-right-spin",
+      "in": 5,
+      "duration": 1.5
+    },
+    {
+      "clip": "hud-drag-left-spin",
+      "in": 5.5,
+      "duration": 1.5
+    },
+    {
+      "clip": "v3-porsche-flip-alt",
+      "in": 2.5,
+      "duration": 2.5
+    },
+    {
+      "clip": "hud-ramp-inversion-close",
+      "in": 6.85,
+      "duration": 2
+    },
+    {
+      "clip": "v3-hero-hover-end",
+      "in": 0,
+      "duration": 9,
+      "overlay": "end-v3"
+    }
+  ]
+}

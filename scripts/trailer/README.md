@@ -1,55 +1,88 @@
 # Roadster gameplay trailers
 
-The extended master is `output/roadster-trailer/roadster-hype-trailer-80s.mp4`: 80 seconds, 1920×1080, 30 fps, H.264, stereo AAC, with burnt-in dialogue captions. Matching SRT/ASS files and a poster accompany it. The approved original `roadster-hype-trailer-60s.mp4` is preserved separately. Rendered media and intermediate captures are ignored by Git; they do not inflate the game download or offline cache.
+The current master is `output/roadster-trailer/roadster-hype-trailer-v3-80s.mp4`: 80 seconds, 1920×1080, 30 fps, H.264 video and stereo AAC, with dialogue captions. Matching `.ass` and `.srt` files use the same filename prefix. The approved 60-second original and first 80-second extension remain separate files.
 
-All gameplay uses the actual Three.js renderer, normal keyboard inputs, and shipped physics. Capture controls frame timing and camera placement; it never forces vehicle position, velocity, damage, or explosions. Porsche impacts, flying parts, and factory ring passes are genuine game events. Audio uses the project's existing ElevenLabs music, effects and stressed voices, plus the game's two-note ring chime.
+Gameplay uses the actual Three.js renderer, normal keyboard inputs and shipped physics. Capture controls frame timing and camera placement; it never forces vehicle positions, velocities, damage or explosions. The live control HUD records the actual Q/W/O/P thrust meters, drive keys, rear boost, speed, hull, timer and factory ring count. The introductory and closing hover shots are separate **branded showroom animations**, rendered with the game's car model and exhaust effects; they are not simulated player flight.
 
-## Extended edit
+Rendered video, intermediate captures and mix masters are ignored by Git. Eight new stressed ElevenLabs voice performances are tracked under `scripts/trailer/audio-v3/`, outside `public/`, so they do not increase the deployed game payload or offline cache. The soundtrack also uses the existing ElevenLabs music, effects and voices, plus the game's two-note ring chime.
 
-The original opening footage and first six seconds of mastered audio are retained. Every gameplay shot after the opening includes the actual game control panel: Q/W/O/P thrust meters, arrow-key presses, rear boost, speed, hull, timer and factory ring count. These are captured live from the DOM, not animated in post. The HUD is raised slightly to leave room for captions. Fresh garage recordings use the camera cutaway fix, and fresh inversion recordings use the corrected road surface. The added sequences show two Porsche collisions, a clean five-ring factory run, and a failed flight with a crash and explosion.
+## Current edit
+
+`edit-v3.json` is the picture edit decision list; `audio-events-v3.json` contains synchronized dialogue and effects. The opening holds on takeoff longer. There is one continuous garage exit, with boxes struck on the way into a barrel-roll crash, followed by a thruster-driven Tesla flip into the Porsche. Inversion plays continuously without the old freeze frame. Gigafactory now asks “Did I do a good job?!” and the crash montage has distinct yells for its impacts. The redesigned closing card lasts nine seconds and its spoken “Excellent data! Terrible landing!” line has no burnt-in caption; that line remains in the optional SRT.
 
 | Time | Sequence |
 | --- | --- |
-| 0–6 | Original cold open and logo reveal |
-| 6–16 | Garage destruction with unobstructed camera |
-| 16–27 | Quarter mile and booster chaos |
-| 27–37 | Porsche pileup and explosive rear-end collision |
-| 37–49 | Inversion ramp |
-| 49–51 | Intentional freeze-frame punchline |
-| 51–61 | Gigafactory ring run and failed flight |
-| 61–76 | Rapid crash montage |
-| 76–80 | Original logo and play URL |
+| 0–6.2 | Takeoff, out-of-control spin and cold-open crash |
+| 6.2–11 | Hovering Roadster title reveal with active jets |
+| 11–19 | Single continuous garage barrel-roll crash |
+| 19–34 | Quarter mile, “Which one is down?!”, and Porsche collision |
+| 34–46 | Inversion ramp and crash |
+| 46–56 | Gigafactory rings and failed flight |
+| 56–71 | Crash montage with different yells |
+| 71–80 | Hovering Roadster, play URL and extended closing card |
 
-## Rebuild
+Garage footage uses the camera cutaway fix; inversion footage uses the corrected road surface. The two Porsche camera angles replay the same deterministic input sequence and collision.
 
-Requires Node, project dependencies, Chrome, FFmpeg/FFprobe, Python with NumPy, and the local game server. Chrome and FFmpeg paths currently target this macOS workspace. Keep `reference/qa/trailer/raw` to preserve the exact original approved opening; regenerating those original captures uses the current version of the game.
+## Rebuild the current master
 
-Start the game server, then capture any missing original footage and all fresh extended footage:
+Requires Node, project dependencies, Chrome, FFmpeg/FFprobe, Python with NumPy, and the local game server. Chrome and FFmpeg paths currently target this macOS workspace. Run commands from the repository root. Start the server in a separate terminal:
 
 ```sh
 npm run dev -- --port 5173
-# Only if the original capture files are missing:
-node scripts/trailer/capture.mjs --recipes=scripts/trailer/shots.json
-# Fresh gameplay with the real control HUD, telemetry and ring counter:
-node scripts/trailer/capture.mjs --recipes=scripts/trailer/shots-hud-80.json
-node scripts/trailer/design.mjs
 ```
 
-Build the original audio master first if absent; the extended mix retains its opening samples exactly:
+Keep existing `reference/qa/trailer/raw` files to retain approved footage exactly. Recreate the shared gameplay recordings only if they are missing, then record the revised shots and showroom animations:
 
 ```sh
-python3 scripts/trailer/audio-bed.py
-python3 scripts/trailer/audio-mix.py scripts/trailer/audio-events.json
-python3 scripts/trailer/audio-bed.py --duration 80
-python3 scripts/trailer/audio-mix.py scripts/trailer/audio-events-80.json
-python3 scripts/trailer/captions.py --report reference/qa/trailer/audio/extended-mix-report.json
-python3 scripts/trailer/edit.py --plan scripts/trailer/edit-80.json \
-  --audio reference/qa/trailer/audio/roadster-trailer-extended-80s.wav \
-  --captions output/roadster-trailer/roadster-hype-trailer-80s.ass
+# Shared gameplay used by both 80-second versions; only needed if absent:
+node scripts/trailer/capture.mjs --recipes=scripts/trailer/shots-hud-80.json
+# Revised garage, Porsche and factory shots, including live controls:
+node scripts/trailer/capture.mjs --recipes=scripts/trailer/shots-v3.json
+node scripts/trailer/hero-hover.mjs
+node scripts/trailer/design.mjs
+node scripts/trailer/design-v3.mjs
 ```
 
-`shots-hud-80.json` contains the final gameplay recordings; `shots-80.json` also retains the clean cinematic variants. `edit-80.json` is the extended picture edit decision list, and `audio-events-80.json` holds the synchronized cues. `edit.json`, `shots.json` and `audio-events.json` preserve the original 60-second recipe. Capture JSONs retain per-frame player/rival physics telemetry, ring passes, and impact times. `scout-v2.mjs` tests recipes at low resolution before final capture.
+The tracked voice files are ready to mix; regeneration is optional. `v3-generate-voices.py` reads `ELEVENLABS_API_KEY` from the environment or accepts `--key-file`, and `--replace` explicitly regenerates voices. Its prompts are in `v3-voice-prompts.json`. No API call is needed for a normal rebuild.
 
-The edit renderer validates every segment and the exact final frame count (2,400 for the extended edit). `--reuse` checks source timestamps, sizes, overlay assets, edit parameters, renderer version and frame count before reusing a segment. HMR messages are suppressed while recording so unrelated file edits cannot reload a shot.
+```sh
+python3 scripts/trailer/v3-audio-bed.py --edit scripts/trailer/edit-v3.json
+python3 scripts/trailer/audio-mix.py scripts/trailer/audio-events-v3.json
+python3 scripts/trailer/captions.py \
+  --report reference/qa/trailer/audio/v3-mix-report.json \
+  --output-prefix roadster-hype-trailer-v3-80s
+python3 scripts/trailer/v3-audio-qa.py
+python3 scripts/trailer/edit.py --plan scripts/trailer/edit-v3.json \
+  --audio reference/qa/trailer/audio/roadster-trailer-v3-80s.wav \
+  --captions output/roadster-trailer/roadster-hype-trailer-v3-80s.ass \
+  --output output/roadster-trailer/roadster-hype-trailer-v3-80s.mp4
+```
 
-Normal graphics are captured at High quality. Adaptive resolution is disabled during offline capture because encoding latency is not representative of game performance. The trailer does not establish stability on any particular phone.
+The explicit output name preserves both earlier masters. Capture JSONs retain per-frame player/rival telemetry, ring passes and impact times. The audio QA verifies source bounds, frame-matched explosions, distinct montage yells and non-overlapping dialogue. `scout-v2.mjs` verifies recipes in Chrome at lower resolution; `scout-v3.mjs` searches control schedules in the shipped physics before browser verification. `recipes-v3-candidates.json` retains the verified stunt recipes used to develop the final shots.
+
+The edit renderer validates every segment and the exact final frame count: 2,400 for the current master. `--reuse` checks source timestamps, sizes, overlay assets, edit parameters, renderer version and frame count before reusing a segment. HMR messages are suppressed during recording. Gameplay is captured at High quality; adaptive resolution is disabled because offline encoding latency does not represent game frame time.
+
+## Earlier versions
+
+`shots.json`, `edit.json` and `audio-events.json` preserve the original 60-second edit. `shots-hud-80.json`, `edit-80.json` and `audio-events-80.json` preserve the first 80-second extension; `shots-80.json` contains its clean cinematic variants. Keep the original raw files for an exact archival rebuild. If missing, use `capture.mjs --recipes=scripts/trailer/shots.json` to recreate the original shots with the current game, and run `design.mjs` for the shared overlays.
+
+```sh
+# Original 60-second master:
+python3 scripts/trailer/audio-bed.py
+python3 scripts/trailer/audio-mix.py scripts/trailer/audio-events.json
+python3 scripts/trailer/captions.py
+python3 scripts/trailer/edit.py --plan scripts/trailer/edit.json \
+  --audio reference/qa/trailer/audio/roadster-trailer-final-60s.wav \
+  --captions output/roadster-trailer/roadster-hype-trailer-60s.ass \
+  --output output/roadster-trailer/roadster-hype-trailer-60s.mp4
+
+# First extension; requires the original audio master above for its opening:
+python3 scripts/trailer/audio-bed.py --duration 80
+python3 scripts/trailer/audio-mix.py scripts/trailer/audio-events-80.json
+python3 scripts/trailer/captions.py \
+  --report reference/qa/trailer/audio/extended-mix-report.json
+python3 scripts/trailer/edit.py --plan scripts/trailer/edit-80.json \
+  --audio reference/qa/trailer/audio/roadster-trailer-extended-80s.wav \
+  --captions output/roadster-trailer/roadster-hype-trailer-80s.ass \
+  --output output/roadster-trailer/roadster-hype-trailer-80s.mp4
+```
