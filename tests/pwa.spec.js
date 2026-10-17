@@ -7,6 +7,29 @@ test.skip(
   "Production offline test needs a built preview in PWA_TEST_URL.",
 );
 
+test("the offline diagnostic stays separate from the game shell", async ({ page, context }) => {
+  await page.goto("/graphics-check.html");
+  // Install the production worker explicitly for this test. The diagnostic
+  // itself must neither register it nor import any game code.
+  expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(0);
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.register("/sw.js");
+    await navigator.serviceWorker.ready;
+  });
+  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller));
+  await context.setOffline(true);
+  // Netlify can serve this file through clean URL aliases too.
+  for (const path of ["/graphics-check.html", "/graphics-check", "/graphics-check/"]) {
+    await page.goto(`${path}?offline-check`);
+    await expect(page).toHaveTitle("Roadster — Graphics check");
+    await expect(page.getByRole("button", { name: "Run graphics check" })).toBeVisible();
+    await expect(page.locator("#game-canvas")).toHaveCount(0);
+    expect(await page.evaluate(() => typeof window.__roadster)).toBe("undefined");
+  }
+  await page.getByRole("button", { name: "Run graphics check" }).click();
+  await expect(page.getByRole("heading", { name: "The single-pixel check passed." })).toBeVisible();
+});
+
 test("production assets, install metadata, and the playable game survive an offline reload", async ({
   page,
   context,

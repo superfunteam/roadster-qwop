@@ -14,13 +14,13 @@ test.afterEach(async ({ page }) => {
   expect(errors.get(page), "Rendering and recovery must not throw browser errors").toEqual([]);
 });
 
-async function openGame(page, quality = "high") {
-  await page.addInitScript((quality) => {
+async function openGame(page, quality = "high", { safeGraphics = false } = {}) {
+  await page.addInitScript(({ quality, safeGraphics }) => {
     if (!localStorage.getItem("roadster-settings")) localStorage.setItem("roadster-settings", JSON.stringify({
-      quality, muted: true, music: false, voices: false, haptics: false, shake: false,
+      quality, safeGraphics, muted: true, music: false, voices: false, haptics: false, shake: false,
     }));
     localStorage.setItem("roadster-manual-seen", "true");
-  }, quality);
+  }, { quality, safeGraphics });
   await page.goto("/");
   await page.waitForFunction(() => window.__roadster?.graphics && !document.querySelector("#loading"));
 }
@@ -117,6 +117,78 @@ test.describe("high-DPR mobile graphics", () => {
     }
   });
 
+  test("compatibility startup and all levels allocate no offscreen or floating-point targets", async ({ page }) => {
+    await page.addInitScript(() => {
+      window.testTargetAllocations = { offscreenAttachments: 0, floatingPointTextures: 0 };
+      const prototype = WebGL2RenderingContext.prototype;
+      // Three creates empty scratch framebuffer handles at construction.
+      // Only attached texture/renderbuffer storage represents an offscreen target.
+      for (const name of ["framebufferTexture2D", "framebufferRenderbuffer"]) {
+        const attach = prototype[name];
+        prototype[name] = function (...args) {
+          if (args[3]) window.testTargetAllocations.offscreenAttachments++;
+          return attach.apply(this, args);
+        };
+      }
+      const floatingFormats = new Set([0x881A, 0x881B, 0x8814, 0x8815, 0x8C3A]);
+      for (const name of ["texStorage2D", "texImage2D"]) {
+        const allocate = prototype[name];
+        prototype[name] = function (...args) {
+          if (floatingFormats.has(args[2])) window.testTargetAllocations.floatingPointTextures++;
+          return allocate.apply(this, args);
+        };
+      }
+    });
+    await openGame(page, "high", { safeGraphics: true });
+    const initial = await snapshot(page);
+    expect(initial.antialias).toBe(false);
+    expect(initial.reflection).toBeNull();
+    expect(initial.graphics.shadows).toBe(false);
+    for (const level of [0, 1, 2]) {
+      await page.evaluate((level) => window.__roadster.startLevel(level), level);
+      const state = await snapshot(page);
+      expect(state.graphics.quality).toBe("high");
+      expect(state.graphics.safeMode).toBe(true);
+      expect(state.graphics.postprocessing).toBe(false);
+      expect(state.graphics.shadows).toBe(false);
+      expect(state.reflection).toBeNull();
+      expect(state.carMeshes).toBe(initial.carMeshes);
+      expect(state.graphics.allocationCount).toBe(0);
+      expect(await page.evaluate(() => window.testTargetAllocations)).toEqual({
+        offscreenAttachments: 0, floatingPointTextures: 0,
+      });
+      expect(state.contextLost).toBe(false);
+    }
+  });
+
+  test("compatibility can toggle offscreen lighting without changing selected quality", async ({ page }) => {
+    await openGame(page);
+    const normal = await snapshot(page);
+    expect(normal.reflection).not.toBeNull();
+    expect(normal.graphics.shadows).toBe(true);
+    await page.getByRole("button", { name: "Settings", exact: true }).click();
+    await page.locator("#setting-safe").check();
+    await page.getByRole("button", { name: "Ready for liftoff" }).click();
+    const safe = await snapshot(page);
+    expect(safe.graphics.quality).toBe("high");
+    expect(safe.graphics.safeMode).toBe(true);
+    expect(safe.reflection).toBeNull();
+    expect(safe.graphics.shadows).toBe(false);
+    expect(safe.carMeshes).toBe(normal.carMeshes);
+    await page.getByRole("button", { name: "Settings", exact: true }).click();
+    await expect(page.locator("#setting-quality")).toHaveValue("high");
+    await page.locator("#setting-safe").uncheck();
+    await page.getByRole("button", { name: "Ready for liftoff" }).click();
+    const restored = await snapshot(page);
+    expect(restored.graphics.quality).toBe("high");
+    expect(restored.graphics.safeMode).toBe(false);
+    expect(restored.reflection).not.toBeNull();
+    expect(restored.reflection).not.toBe(normal.reflection);
+    expect(restored.graphics.shadows).toBe(true);
+    expect(restored.carMeshes).toBe(normal.carMeshes);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem("roadster-settings")).quality)).toBe("high");
+  });
+
   test("duplicate resize events do not reallocate GPU surfaces", async ({ page }) => {
     await openGame(page);
     const before = await snapshot(page);
@@ -204,7 +276,9 @@ test.describe("high-DPR mobile graphics", () => {
     expect(restored.paused).toBe(true);
     expect(restored.enabled).toBe(false);
     expect(restored.time).toBe(lost.time);
-    expect(restored.reflection).not.toBe(before.reflection);
+    expect(before.reflection).not.toBeNull();
+    expect(restored.reflection).toBeNull();
+    expect(restored.graphics.shadows).toBe(false);
     expect(restored.graphics.safeMode).toBe(true);
     expect(restored.graphics.postprocessing).toBe(false);
     expect(restored.graphics.pixelCount).toBeLessThanOrEqual(450_000);
@@ -219,6 +293,8 @@ test.describe("high-DPR mobile graphics", () => {
     const restarted = await snapshot(page);
     expect(restarted.antialias).toBe(false);
     expect(restarted.graphics.safeMode).toBe(true);
+    expect(restarted.reflection).toBeNull();
+    expect(restarted.graphics.shadows).toBe(false);
     expect(restarted.graphics.quality).toBe("high");
     expect(restarted.graphics.pixelCount).toBeLessThanOrEqual(450_000);
   });
@@ -236,6 +312,8 @@ test.describe("high-DPR mobile graphics", () => {
     expect(after.enabled).toBe(false);
     expect(after.time).toBe(before.time);
     expect(after.contextLost).toBe(false);
+    expect(after.reflection).toBeNull();
+    expect(after.graphics.shadows).toBe(false);
   });
 });
 

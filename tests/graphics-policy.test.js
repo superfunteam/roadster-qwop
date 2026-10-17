@@ -29,7 +29,8 @@ test("4K desktop composition stays inside its pixel budget and hardware dimensio
 test("safe recovery and unsupported floating-point targets both bypass composition", () => {
   const safe = graphicsPlan({ quality: "high", width: 1920, height: 1080, safeMode: true });
   assert.equal(safe.postprocessing, false);
-  assert.equal(safe.shadowSize, 512);
+  assert.equal(safe.shadowSize, 0);
+  assert.equal(safe.shadows, false);
   assert.equal(safe.quality, "high", "recovery does not overwrite the user's selection");
   assert.ok(safe.pixelCount <= 450_000);
   const unsupported = graphicsPlan({ quality: "high", floatSupported: false });

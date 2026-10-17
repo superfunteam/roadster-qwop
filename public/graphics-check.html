@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#090c11" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="data:," />
+    <title>Roadster — Graphics check</title>
+    <style>
+      * { box-sizing: border-box; }
+      html { background: #090c11; color: #edf0f4; font: 15px/1.55 Arial, sans-serif; }
+      body { margin: 0; padding: max(24px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(32px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); }
+      main { width: min(100%, 660px); margin: 0 auto; }
+      header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin: 10px 0 38px; font-size: 10px; letter-spacing: .22em; }
+      .brand { font-weight: 600; letter-spacing: .35em; }
+      .eyebrow { margin: 0 0 14px; color: #9daabb; font-size: 10px; letter-spacing: .18em; }
+      h1 { margin: 0 0 20px; font-size: clamp(30px, 7vw, 46px); line-height: 1.08; font-weight: 500; }
+      h2 { margin: 0 0 12px; font-size: 21px; line-height: 1.2; font-weight: 500; }
+      p { margin: 0 0 18px; color: #bac5d3; }
+      .panel { margin-top: 24px; padding: clamp(18px, 5vw, 28px); border: 1px solid #ffffff26; border-radius: 5px; background: #10151d; }
+      .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 0; }
+      button { flex: 1 1 180px; min-height: 48px; padding: 12px 20px; border: 1px solid #ffffff40; border-radius: 3px; background: #e9edf3; color: #10151d; font: 600 13px Arial, sans-serif; cursor: pointer; touch-action: manipulation; }
+      button:disabled { opacity: .5; cursor: default; }
+      button.secondary { background: transparent; color: #edf0f4; }
+      button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid #a7ccff; outline-offset: 3px; }
+      label { display: block; margin-top: 20px; color: #c6d0de; font-size: 13px; }
+      input, textarea { display: block; width: 100%; margin-top: 8px; border: 1px solid #ffffff30; border-radius: 3px; background: #070b11; color: #edf0f4; font: 13px/1.5 monospace; user-select: text; }
+      input { min-height: 46px; padding: 10px 12px; }
+      textarea { min-height: 240px; padding: 12px; resize: vertical; }
+      ol { padding-left: 22px; margin: 0; color: #bac5d3; }
+      li + li { margin-top: 9px; }
+      .note, #copy-status { margin-top: 16px; color: #9daabb; font-size: 12px; }
+      [hidden] { display: none !important; }
+      #check-canvas { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header><span class="brand">ROADSTER</span><span>GRAPHICS DIAGNOSTICS</span></header>
+      <p class="eyebrow">ONE PIXEL. ONE CHECK.</p>
+      <h1>Check the graphics system.</h1>
+      <p>This checks whether the browser can open one small WebGL 2 canvas and render a single pixel. Tap below to begin.</p>
+      <p class="note">The check runs once. It uses no game scenes or audio. Nothing is sent automatically.</p>
+      <div class="actions"><button id="run-check" type="button">Run graphics check</button></div>
+      <section id="result" class="panel" aria-labelledby="result-title" hidden>
+        <div role="status" aria-live="polite" aria-atomic="true"><h2 id="result-title"></h2><p id="result-description"></p></div>
+        <div class="actions"><button id="copy-report" type="button">Copy graphics report</button></div>
+        <p id="copy-status" role="status" aria-live="polite"></p>
+        <label for="report">Graphics report — select to copy<textarea id="report" readonly spellcheck="false"></textarea></label>
+      </section>
+      <section id="browser-details" class="panel" aria-labelledby="browser-details-title" hidden>
+        <h2 id="browser-details-title">Chrome’s graphics details</h2>
+        <p>This page cannot clear a browser graphics block. The report and Chrome’s own diagnostics can help identify what is happening.</p>
+        <ol>
+          <li>Copy the graphics report above and share it with the developer.</li>
+          <li>Copy the address below, paste it into Chrome’s address bar, and press Go.</li>
+          <li>Share the <strong>Graphics Feature Status</strong>, <strong>Driver Information</strong>, <strong>Problems Detected</strong>, and <strong>Log Messages</strong> sections with the developer. Chrome’s <strong>Download Report to File</strong> option may be easier.</li>
+        </ol>
+        <label for="gpu-address">Chrome diagnostics address<input id="gpu-address" value="chrome://gpu" readonly spellcheck="false" /></label>
+        <p class="note">This browser-internal address must be opened from the address bar.</p>
+      </section>
+      <p class="note">Diagnostic version: graphics-check-2026-10-16.1</p>
+      <noscript><p>Enable JavaScript to run this graphics check.</p></noscript>
+    </main>
+    <script>
+      (() => {
+        "use strict";
+        const BUILD = "graphics-check-2026-10-16.1";
+        const requestedAttributes = { antialias: false, powerPreference: "default", alpha: false };
+        const runButton = document.querySelector("#run-check");
+        const reportField = document.querySelector("#report");
+        const result = document.querySelector("#result");
+        let started = false;
+        // Retain the sole canvas and context for this page's lifetime. Do not
+        // deliberately lose the context or create another one to retry.
+        let canvas = null, context = null;
+        let report = null;
+
+        const blocked = () => report.contextStatus.some((message) =>
+          /web\s+page\s+caused\s+context\s+loss\s+and\s+was\s+blocked/i.test(message),
+        );
+        const serialize = () => JSON.stringify(report, null, 2);
+        function renderReport() {
+          const start = reportField.selectionStart, end = reportField.selectionEnd;
+          const allSelected = start === 0 && end === reportField.value.length;
+          reportField.value = serialize();
+          if (document.activeElement === reportField)
+            reportField.setSelectionRange(allSelected ? 0 : start, allSelected ? reportField.value.length : end);
+          const title = document.querySelector("#result-title");
+          const description = document.querySelector("#result-description");
+          if (blocked()) {
+            title.textContent = "The browser blocked this check.";
+            description.textContent = "The browser reported that this page caused context loss and was blocked. No additional graphics context was requested.";
+          } else if (report.contextLost) {
+            title.textContent = "The graphics context was lost.";
+            description.textContent = "The context became unavailable during this minimal check. Copy the report and Chrome’s graphics details below.";
+          } else if (!report.contextCreated) {
+            title.textContent = "A WebGL 2 context was not created.";
+            description.textContent = "This result alone does not identify the cause. Copy the report and the browser’s graphics details below.";
+          } else if (report.pixelCheck?.matched && report.pixelCheck.clearError === 0 && report.pixelCheck.readError === 0) {
+            title.textContent = "The single-pixel check passed.";
+            description.textContent = "The browser created WebGL 2 and returned the expected pixel. This small check does not establish whether the full game will run reliably.";
+          } else {
+            title.textContent = "The pixel check did not pass.";
+            description.textContent = "The browser opened a graphics context, but the check did not return the expected result. Copy the raw results below.";
+          }
+          document.querySelector("#browser-details").hidden = false;
+        }
+
+        runButton.addEventListener("click", () => {
+          if (started) return;
+          started = true;
+          runButton.disabled = true;
+          runButton.textContent = "Check complete";
+          result.hidden = false;
+          report = {
+            diagnostic: BUILD,
+            date: new Date().toISOString(),
+            browser: navigator.userAgent,
+            secureContext: window.isSecureContext,
+            visibilityState: document.visibilityState,
+            route: { origin: location.origin, pathname: location.pathname },
+            webgl2ConstructorPresent: typeof WebGL2RenderingContext !== "undefined",
+            contextAttempts: 1,
+            requestedAttributes,
+            contextCreated: false,
+            contextLost: false,
+            contextStatus: [],
+          };
+          canvas = document.createElement("canvas");
+          canvas.id = "check-canvas";
+          canvas.width = canvas.height = 1;
+          canvas.setAttribute("aria-hidden", "true");
+          canvas.addEventListener("webglcontextcreationerror", (event) => {
+            report.contextStatus.push(event.statusMessage || "Creation failed without a status message.");
+            renderReport();
+          });
+          canvas.addEventListener("webglcontextlost", (event) => {
+            report.contextLost = true;
+            report.contextStatus.push(event.statusMessage || "The context was lost.");
+            renderReport();
+          });
+          document.body.append(canvas);
+          try {
+            context = canvas.getContext("webgl2", requestedAttributes);
+            report.contextCreated = Boolean(context);
+            if (context) {
+              const gl = context;
+              report.contextLost = gl.isContextLost();
+              report.actualAttributes = gl.getContextAttributes();
+              report.version = gl.getParameter(gl.VERSION);
+              report.shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
+              report.vendor = gl.getParameter(gl.VENDOR);
+              report.renderer = gl.getParameter(gl.RENDERER);
+              const debug = gl.getExtension("WEBGL_debug_renderer_info");
+              if (debug) {
+                report.unmaskedVendor = gl.getParameter(debug.UNMASKED_VENDOR_WEBGL);
+                report.unmaskedRenderer = gl.getParameter(debug.UNMASKED_RENDERER_WEBGL);
+              }
+              const viewport = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
+              report.limits = {
+                maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
+                maxRenderbufferSize: gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),
+                maxViewportDimensions: viewport ? Array.from(viewport) : null,
+                maxVertexAttributes: gl.getParameter(gl.MAX_VERTEX_ATTRIBS),
+                maxTextureImageUnits: gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),
+              };
+              const color = [0.125, 0.5, 0.75, 1];
+              gl.clearColor(...color);
+              gl.clear(gl.COLOR_BUFFER_BIT);
+              const clearError = gl.getError();
+              const pixel = new Uint8Array(4);
+              gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+              const readError = gl.getError();
+              const expected = color.map((value) => Math.round(value * 255));
+              report.pixelCheck = {
+                clearColor: color,
+                expected,
+                actual: Array.from(pixel),
+                clearError,
+                readError,
+                matched: pixel.every((value, index) => Math.abs(value - expected[index]) <= 1),
+              };
+              report.contextLost = gl.isContextLost();
+            }
+          } catch (error) {
+            report.error = String(error?.message || error);
+          }
+          renderReport();
+        });
+        document.querySelector("#copy-report").addEventListener("click", async () => {
+          const status = document.querySelector("#copy-status");
+          try {
+            await navigator.clipboard.writeText(serialize());
+            status.textContent = "Graphics report copied. Share it with the developer.";
+          } catch {
+            reportField.focus();
+            reportField.select();
+            status.textContent = "Select and copy the report below. Nothing is sent automatically.";
+          }
+        });
+        document.querySelector("#gpu-address").addEventListener("focus", (event) => event.target.select());
+      })();
+    </script>
+  </body>
+</html>

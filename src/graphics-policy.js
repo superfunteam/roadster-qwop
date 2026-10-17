@@ -45,7 +45,7 @@ export function graphicsPlan({
   const renderWidth = Math.max(1, Math.floor(width * pixelRatio));
   const renderHeight = Math.max(1, Math.floor(height * pixelRatio));
   const postprocessing = !mobile && !safeMode && floatSupported && quality !== "low" && adaptiveStep < 3;
-  const shadowSize = !profile.shadowSize ? 0 : safeMode ? 512 :
+  const shadowSize = safeMode || !profile.shadowSize ? 0 :
     adaptiveStep >= 2 ? Math.min(profile.shadowSize, 1024) : profile.shadowSize;
   return {
     quality, mobile: Boolean(mobile), safeMode: Boolean(safeMode),

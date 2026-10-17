@@ -87,9 +87,9 @@ function rebuildReflections() {
   scene.environment = null;
   environmentTarget?.dispose();
   environmentTarget = null;
-  // PMREM itself needs a half-float render target, even without composition.
-  // Keep direct scene lighting usable when that optional capability is absent.
-  if (!renderer.extensions.has("EXT_color_buffer_float")) return;
+  // PMREM allocates and renders half-float targets even with a 1px canvas.
+  // Compatibility mode must skip that GPU path before any scene is rendered.
+  if (settings.safeGraphics || !renderer.extensions.has("EXT_color_buffer_float")) return;
   const generator = new THREE.PMREMGenerator(renderer);
   const room = new RoomEnvironment();
   try {
@@ -100,7 +100,6 @@ function rebuildReflections() {
     generator.dispose();
   }
 }
-rebuildReflections();
 scene.environmentIntensity = 0.6;
 const car = createCar();
 scene.add(car.group);
@@ -258,6 +257,7 @@ async function copyGraphicsReport() {
   const debug = !lost && gl.getExtension("WEBGL_debug_renderer_info");
   const report = JSON.stringify({
     date: new Date().toISOString(),
+    build: __ROADSTER_BUILD__,
     browser: navigator.userAgent,
     gpu: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : "unavailable",
     webgl: lost ? "context lost" : gl.getParameter(gl.VERSION),
@@ -267,6 +267,7 @@ async function copyGraphicsReport() {
     antialias: gl.getContextAttributes()?.antialias,
     drawingBuffer: [gl.drawingBufferWidth, gl.drawingBufferHeight],
     resources: { ...renderer.info.memory },
+    environmentReflections: Boolean(scene.environment),
     level: mode === "game" ? LEVELS[selected].id : "hangar",
   }, null, 2);
   try {
@@ -535,6 +536,7 @@ function action(name, value) {
     return;
   }
   if (name === "save-settings") {
+    const wasSafeGraphics = settings.safeGraphics;
     settings.muted = !document.querySelector("#setting-sound").checked;
     settings.music = document.querySelector("#setting-music").checked;
     settings.voices = document.querySelector("#setting-voices").checked;
@@ -547,6 +549,7 @@ function action(name, value) {
     audio.setPreferences(settings);
     ui.setMuted(settings.muted);
     configureGraphics();
+    if (wasSafeGraphics !== settings.safeGraphics) rebuildReflections();
     action("close");
     return;
   }
@@ -803,8 +806,8 @@ renderer.domElement.addEventListener("webglcontextrestored", () => {
     return;
   }
   try {
-    // Three recreates its GL state before this listener. GPU-generated
-    // reflections must be regenerated too; the old texture has no pixels.
+    // Three recreates its GL state first. Recovery keeps reflections disabled
+    // in compatibility mode instead of recreating the same half-float targets.
     graphics.restore(graphicsOptions());
     rebuildReflections();
     resizeEffects();
@@ -818,6 +821,8 @@ renderer.domElement.addEventListener("webglcontextrestored", () => {
 });
 setupPWA();
 home();
+// Install loss handlers and apply the render budget before any reflection pass.
+rebuildReflections();
 const linkedLevel = LEVELS.findIndex(
   (level) => level.id === new URLSearchParams(location.search).get("test"),
 );

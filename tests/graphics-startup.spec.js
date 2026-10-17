@@ -44,13 +44,13 @@ async function simulateContextFailures(page, { all = true, clipboardFailure = fa
 
 const CHROME_BLOCK = "Web page caused context loss and was blocked";
 
-test("an explicit Chromium block skips the second canvas and explains browser-controlled reload", async ({ page }) => {
+test("an explicit Chromium block skips the second canvas and offers an isolated graphics check", async ({ page }) => {
   await simulateContextFailures(page, { statusMessage: CHROME_BLOCK, clipboardFailure: true });
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Chrome blocked the graphics." })).toBeVisible();
   await expect(page.getByText(/Compatibility mode is saved/)).toBeVisible();
-  await expect(page.getByText(/Open Chrome’s menu and tap Reload, or tap the address bar and press Go/)).toBeVisible();
-  await expect(page.getByText(/button inside this page cannot clear this block/)).toBeVisible();
+  await expect(page.getByText(/This page cannot clear the browser’s block/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open graphics check" })).toHaveAttribute("href", "/graphics-check.html");
   await expect(page.getByRole("button", { name: "Reload safely", exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => [...new Set(window.startupContextAttempts.map((attempt) => attempt.canvas))])).toEqual([1]);
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("roadster-settings")).safeGraphics)).toBe(true);

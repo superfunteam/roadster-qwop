@@ -42,7 +42,11 @@ self.addEventListener("fetch", (event) => {
         } catch {
           /* The complete precached shell is available without a network. */
         }
-        const shell = /^\/player(?:\/|$)/.test(url.pathname)
+        // A troubleshooting visit must never fall back to the full game:
+        // that could immediately recreate the failing graphics workload.
+        const shell = /^\/graphics-check(?:\.html|\/)?$/.test(url.pathname)
+          ? "/graphics-check.html"
+          : /^\/player(?:\/|$)/.test(url.pathname)
           ? "/player/index.html"
           : "/index.html";
         return (await caches.match(shell)) || Response.error();

@@ -57,6 +57,9 @@ function offlineGame() {
 }
 
 export default defineConfig({
+  // Netlify supplies the deployed commit. Reports can identify a stale build
+  // without collecting additional device data or making a network request.
+  define: { __ROADSTER_BUILD__: JSON.stringify(process.env.COMMIT_REF || "local") },
   plugins: [offlineGame()],
   // Exercise cross-origin and opaque-origin player frames in local QA.
   server: {

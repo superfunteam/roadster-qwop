@@ -20,12 +20,13 @@ function showStartupFailure(attempts, onSafeMode) {
     <p data-startup-description>The browser could not open the game's graphics system. It may be temporarily unavailable after a graphics crash; this does not necessarily mean your device lacks WebGL 2.</p>
     <p data-startup-instructions>Try reloading with lighter settings. If it still cannot start, close other graphics-heavy tabs and reopen the browser. Some browsers or devices may not support the graphics this game needs.</p>
     <p data-startup-followup hidden></p>
-    <div class="graphics-startup-actions"><button type="button" class="primary-button" data-startup-action="reload">Reload safely</button><button type="button" class="secondary-button" data-startup-action="report">Copy graphics report</button></div>
+    <div class="graphics-startup-actions"><button type="button" class="primary-button" data-startup-action="reload">Reload safely</button><button type="button" class="secondary-button" data-startup-action="report">Copy graphics report</button><a class="secondary-button" href="/graphics-check.html" target="_blank" rel="noopener">Open graphics check</a></div>
     <p class="graphics-startup-status" role="status" aria-live="polite"></p>
     <label class="graphics-startup-report" hidden>Graphics report<textarea readonly spellcheck="false" aria-label="Graphics report"></textarea></label>
   </section>`;
   const makeReport = () => JSON.stringify({
     date: new Date().toISOString(),
+    build: __ROADSTER_BUILD__,
     browser: navigator.userAgent,
     webgl: "context creation failed",
     browserBlocked: hasBlockedStatus(attempts),
@@ -59,11 +60,11 @@ function showStartupFailure(attempts, onSafeMode) {
     const chrome = /\b(?:Chrome|HeadlessChrome|CriOS)\//.test(navigator.userAgent) &&
       !/\b(?:Edg|EdgA|OPR|SamsungBrowser)\//.test(navigator.userAgent);
     loading.querySelector("#graphics-startup-title").textContent = chrome ? "Chrome blocked the graphics." : "The browser blocked graphics.";
-    loading.querySelector("[data-startup-description]").textContent = `${chrome ? "Chrome" : "The browser"} blocked 3D graphics after a previous graphics failure. Compatibility mode is saved.`;
-    loading.querySelector("[data-startup-instructions]").textContent = `Open ${chrome ? "Chrome’s" : "the browser’s"} menu and tap Reload, or tap the address bar and press Go. Reloading from a button inside this page cannot clear this block.`;
+    loading.querySelector("[data-startup-description]").textContent = `${chrome ? "Chrome" : "The browser"} refused a graphics context before the game could render. Compatibility mode is saved. This page cannot clear the browser’s block.`;
+    loading.querySelector("[data-startup-instructions]").textContent = "Open the lightweight graphics check below. It tests one pixel without loading the car, levels or effects. It can help isolate the failure, but cannot guarantee the full game will run.";
     const followup = loading.querySelector("[data-startup-followup]");
     followup.hidden = false;
-    followup.textContent = "If it remains blocked, close this tab and type the address into a new tab.";
+    followup.textContent = "If reloading or reopening the browser has not helped, share the graphics check report with the developer. Repeated reloads may not resolve the underlying graphics failure.";
     const moveFocus = document.activeElement === reloadButton;
     reloadButton.remove();
     reportButton.className = "primary-button";
