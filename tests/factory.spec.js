@@ -61,6 +61,46 @@ async function telemetry(page) {
   });
 }
 
+async function reachInversionLaunch(page) {
+  const stage = await page.evaluate(() => {
+    const game = window.__roadster;
+    for (let i = 0; i < 1200 && game.physics.state.rampStage !== "airborne" && !game.physics.outcome; i++) {
+      window.flightTick();
+    }
+    return game.physics.state.rampStage;
+  });
+  expect(stage).toBe("airborne");
+}
+
+async function expectInversionLanding(page, screenshot) {
+  const result = await page.evaluate(() => {
+    const game = window.__roadster;
+    for (let i = 0; i < 1200 && !game.physics.outcome; i++) window.flightTick();
+    const landingPosition = game.physics.body.position.toArray();
+    // Let the complete loop display its result and verify it keeps the win.
+    window.flightTick(45);
+    return {
+      outcome: game.physics.outcome,
+      damage: game.physics.damage,
+      caught: game.physics._landingCaught,
+      exploded: game.wreck.exploded,
+      wheels: game.car.wheels.filter((wheel) => wheel.visible).length,
+      landingPosition,
+    };
+  });
+  expect(result).toMatchObject({ outcome: "success", caught: true, exploded: false, wheels: 4 });
+  expect(result.damage).toBeLessThan(1);
+  // The side-flip lands on the visible concrete beyond the former 14 m gate.
+  expect(Math.abs(result.landingPosition[0])).toBeGreaterThan(14);
+  await expect(page.getByRole("dialog").locator(".eyebrow")).toHaveText("TEST 03 / COMPLETE");
+  await expect(page.getByRole("button", { name: "Next test" })).toBeVisible();
+  if (screenshot) await page.screenshot({ path: screenshot });
+  await page.getByRole("button", { name: "Next test" }).click();
+  await tick(page, 90);
+  await expect(page.locator("#hud-level-name")).toHaveText("The Gigafactory");
+  await expect(page.locator("#ring-count")).toHaveText("0 / 5");
+}
+
 const errors = new WeakMap();
 test.beforeEach(({ page }) => {
   const messages = [];
@@ -138,8 +178,41 @@ test("the real inversion flip lands without exploding and Next test opens the fa
   await expect(page.locator("#ring-count")).toHaveText("0 / 5");
 });
 
+for (const [side, pair] of [["left", ["q", "o"]], ["right", ["w", "p"]]]) {
+  test(`inversion ${side} barrel roll followed by all four jets lands on the apron and completes`, async ({ page }) => {
+    await boot(page);
+    await start(page, 2);
+    await reachInversionLaunch(page);
+    for (const key of pair) await page.keyboard.down(key);
+    await tick(page, 48);
+    for (const key of ["q", "w", "o", "p"]) if (!pair.includes(key)) await page.keyboard.down(key);
+    await tick(page, 48);
+    for (const key of ["q", "w", "o", "p"]) await page.keyboard.up(key);
+    await expectInversionLanding(page);
+  });
+}
+
 test.describe("touch flight", () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test("sliding from side jets to Lift lands the inversion on the apron and completes", async ({ page, context }) => {
+    await boot(page);
+    await start(page, 2);
+    await reachInversionLaunch(page);
+    const cdp = await context.newCDPSession(page);
+    const point = async (jets) => {
+      const bounds = await page.locator(`[data-jets="${jets}"]`).boundingBox();
+      return { id: 1, x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2, radiusX: 4, radiusY: 4, force: 1 };
+    };
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [await point("qo")] });
+    await expect(page.locator('[data-jets="qo"]')).toHaveAttribute("aria-pressed", "true");
+    await tick(page, 48);
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [await point("qwop")] });
+    await expect(page.locator('[data-jets="qwop"]')).toHaveAttribute("aria-pressed", "true");
+    await tick(page, 48);
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expectInversionLanding(page, "reference/qa/inversion-apron-mobile-complete.png");
+  });
 
   test("two fingers on Boost and Lift can finish the factory course", async ({ page, context }) => {
     await boot(page);

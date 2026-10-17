@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { FACTORY_RINGS } from "./flight-course.js";
+import { INVERSION_APRON } from "./inversion-course.js";
 
 // All dimensions are metres. The track and its collision surfaces share one path.
 export const RAMP = {
@@ -1339,16 +1340,18 @@ export function buildEnvironment(level, scene, physics) {
     // Keep the landing collider perfectly flat, but leave an actual opening in
     // its visible apron for the runway. Two surfaces at y=0 were fighting for
     // the same depth pixels, particularly as the camera moved along the road.
+    const { width: apronWidth, length: apronLength, centerZ: apronZ } = INVERSION_APRON;
     physics?.addBox?.({
-      position: [0, -0.5, 25], size: [230, 1, 300], rotation: [0, 0, 0],
+      position: [0, -0.5, apronZ], size: [apronWidth, 1, apronLength], rotation: [0, 0, 0],
       mass: 0, friction: 0.7, restitution: 0.13, label: "scenery",
     });
     const halfRoad = RAMP.width / 2;
-    const sideWidth = 115 - halfRoad;
+    const sideWidth = apronWidth / 2 - halfRoad;
     for (const side of [-1, 1])
-      box([sideWidth, 1, 300], [side * (halfRoad + sideWidth / 2), -0.5, 25], apron, { cast: false });
-    box([RAMP.width, 1, 95], [0, -0.5, -77.5], apron, { cast: false });
-    box([RAMP.width, 1, 133], [0, -0.5, 108.5], apron, { cast: false });
+      box([sideWidth, 1, apronLength], [side * (halfRoad + sideWidth / 2), -0.5, apronZ], apron, { cast: false });
+    const apronStart = apronZ - apronLength / 2, apronEnd = apronZ + apronLength / 2;
+    box([RAMP.width, 1, -30 - apronStart], [0, -0.5, (apronStart - 30) / 2], apron, { cast: false });
+    box([RAMP.width, 1, apronEnd - RAMP.entryZ], [0, -0.5, (RAMP.entryZ + apronEnd) / 2], apron, { cast: false });
     const road = material("#aeb5c0", 0.68, 0.2, {
       map: surfaceTexture("#454a50", 10, [2, 9]),
     });

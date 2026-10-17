@@ -1,6 +1,7 @@
 import * as CANNON from "cannon-es";
 import { FACTORY_RINGS, FACTORY_RING_GOAL, FACTORY_BOUNDS } from "./flight-course.js";
 import { RivalPhysics } from "./rival-physics.js";
+import { onInversionApron } from "./inversion-course.js";
 
 // Metres, seconds, kilograms. +Z is the nose of the car; +Y is up.
 export const PHYSICS = Object.freeze({
@@ -36,6 +37,7 @@ const JETS = [
   new CANNON.Vec3(0.88, -0.19, -1.5),
 ];
 const KEYS = ["q", "w", "o", "p"];
+const LANDING_UPRIGHT = 0.75;
 
 /** Four independent cold-gas jets on an ordinary, very heavy rigid body. */
 export class PhysicsGame {
@@ -388,10 +390,10 @@ export class PhysicsGame {
     if (
       this.level !== "ramp" || !this._hasClimbed || !this._rampLaunched ||
       this._landingCaught || this.outcome || this.damage >= 90 ||
-      this._up.y < Math.cos(Math.PI / 6) ||
+      this._up.y <= LANDING_UPRIGHT ||
       this.body.angularVelocity.length() > 2.5 ||
       this.body.velocity.y >= -4.5 || this.body.velocity.y < -32 ||
-      Math.abs(position.x) >= 14 || position.z <= -25 || position.z >= 40
+      !onInversionApron(position)
     ) return;
 
     let supportedWheels = 0;
@@ -716,13 +718,11 @@ export class PhysicsGame {
         this._rampLaunched &&
         position.y < 1.25 &&
         this.contactCount >= 2 &&
-        this._up.y > 0.75 &&
+        this._up.y > LANDING_UPRIGHT &&
         Math.abs(this.body.velocity.y) < 4.5 &&
         this.body.angularVelocity.length() < 2.5 &&
         this.damage < 90 &&
-        position.z < 40 &&
-        position.z > -25 &&
-        Math.abs(position.x) < 14;
+        onInversionApron(position);
       this._landingTime = settledLanding ? this._landingTime + dt : 0;
       if (this._landingTime >= 0.18 && !this.outcome) {
         this.outcome = "success";
